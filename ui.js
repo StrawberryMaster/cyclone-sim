@@ -63,10 +63,6 @@ class UI{
         }
     }
 
-    // fullRect(){
-    //     rect(0,0,this.width,this.height);   // Easy method for use in the render function
-    // }
-
     schematics(){
         let s = {};
         s.fullRect = ()=>{
@@ -283,6 +279,7 @@ UI.init = function(){
     },false);
     loadMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
     settingsMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
+    let desigSystemEditor = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
     primaryWrapper = new UI(null,0,0,WIDTH,HEIGHT,function(s){
         if(UI.viewBasin instanceof Basin){
             let basin = UI.viewBasin;
@@ -327,6 +324,8 @@ UI.init = function(){
                 drawMagGlass();
                 if(!basin.env.layerIsVector) drawBuffer(coastLine);
             }
+            // let sub = land.getSubBasin(getMouseX(),getMouseY());
+            // if(basin.subBasins[sub] instanceof SubBasin && basin.subBasins[sub].mapOutline) drawBuffer(basin.subBasins[sub].mapOutline);   // test
             drawBuffer(tracks);
             drawBuffer(forecastTracks);
             drawBuffer(stormIcons);
@@ -334,46 +333,49 @@ UI.init = function(){
     },function(){
         helpBox.hide();
         sideMenu.hide();
+        seedBox.hide();
         if(UI.viewBasin instanceof Basin){
             let basin = UI.viewBasin;
             if(basin.godMode && keyIsPressed && basin.viewingPresent()) {
-                let g = {x: getMouseX(), y: getMouseY()};
-                if(key === "l" || key === "L"){
-                    g.sType = "l";
-                }else if(key === "d"){
-                    g.sType = "d";
-                }else if(key === "D"){
-                    g.sType = "sd";
-                }else if(key === "s"){
-                    g.sType = "s";
-                }else if(key === "S"){
-                    g.sType = "ss";
-                }else if(key === "1"){
-                    g.sType = "1";
-                }else if(key === "2"){
-                    g.sType = "2";
-                }else if(key === "3"){
-                    g.sType = "3";
-                }else if(key === "4"){
-                    g.sType = "4";
-                }else if(key === "5"){
-                    g.sType = "5";
-                }else if(key === "6" && basin.hypoCats){
-                    g.sType = "6";
-                }else if(key === "7" && basin.hypoCats){
-                    g.sType = "7";
-                }else if(key === "8" && basin.hypoCats){
-                    g.sType = "8";
-                }else if(key === "9" && basin.hypoCats){
-                    g.sType = "9";
-                }else if(key === "0" && basin.hypoCats){
-                    g.sType = "10";
-                }else if((key === "y" || key === "Y") && basin.hypoCats){
-                    g.sType = "y";
-                }else if(key === "x" || key === "X"){
-                    g.sType = "x";
-                }else return;
-                basin.spawn(false,g);
+                if(['l','x','d','D','s','S','1','2','3','4','5','6','7','8','9','0','y'].includes(key))
+                    basin.spawnArchetype(key,getMouseX(),getMouseY());
+                // let g = {x: getMouseX(), y: getMouseY()};
+                // if(key === "l" || key === "L"){
+                //     g.sType = "l";
+                // }else if(key === "d"){
+                //     g.sType = "d";
+                // }else if(key === "D"){
+                //     g.sType = "sd";
+                // }else if(key === "s"){
+                //     g.sType = "s";
+                // }else if(key === "S"){
+                //     g.sType = "ss";
+                // }else if(key === "1"){
+                //     g.sType = "1";
+                // }else if(key === "2"){
+                //     g.sType = "2";
+                // }else if(key === "3"){
+                //     g.sType = "3";
+                // }else if(key === "4"){
+                //     g.sType = "4";
+                // }else if(key === "5"){
+                //     g.sType = "5";
+                // }else if(key === "6"){
+                //     g.sType = "6";
+                // }else if(key === "7"){
+                //     g.sType = "7";
+                // }else if(key === "8"){
+                //     g.sType = "8";
+                // }else if(key === "9"){
+                //     g.sType = "9";
+                // }else if(key === "0"){
+                //     g.sType = "10";
+                // }else if(key === "y" || key === "Y"){
+                //     g.sType = "y";
+                // }else if(key === "x" || key === "X"){
+                //     g.sType = "x";
+                // }else return;
+                // basin.spawn(false,g);
             }else if(basin.viewingPresent()){
                 let mVector = createVector(getMouseX(),getMouseY());
                 for(let i=basin.activeSystems.length-1;i>=0;i--){
@@ -443,7 +445,7 @@ UI.init = function(){
     },function(){
         mainMenu.hide();
         settingsMenu.show();
-    })/* .append(false,0,60,200,30,[18,5]).append(false,0,60,200,30,[18,32]) */;     // test test test
+    });
 
     // basin creation menu
 
@@ -455,9 +457,11 @@ UI.init = function(){
         text("New Basin Settings",0,0);
     });
 
-    let basinCreationMenuButtonSpacing = 40;
+    let basinCreationMenuButtonSpacing = 36;
+    let basinCreationMenuButtonHeights = 28;
+    let basinCreationMenuButtonWidths = 400;
 
-    let hemsel = basinCreationMenu.append(false,WIDTH/2-150,HEIGHT/8,300,30,function(s){   // hemisphere selector
+    let hemsel = basinCreationMenu.append(false,WIDTH/2-basinCreationMenuButtonWidths/2,HEIGHT/8,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){   // hemisphere selector
         let hem = "Random";
         if(newBasinSettings.hem===1) hem = "Northern";
         if(newBasinSettings.hem===2) hem = "Southern";
@@ -471,12 +475,12 @@ UI.init = function(){
         }
     });
 
-    let yearsel = hemsel.append(false,0,basinCreationMenuButtonSpacing,0,30,function(s){ // Year selector
+    let yearsel = hemsel.append(false,0,basinCreationMenuButtonSpacing,0,basinCreationMenuButtonHeights,function(s){ // Year selector
         textAlign(LEFT,CENTER);
-        text("Starting year: ",0,15);
+        text("Starting year: ",0,basinCreationMenuButtonHeights/2);
     });
 
-    yearsel.append(false,110,0,190,30,function(s){
+    yearsel.append(false,110,0,basinCreationMenuButtonWidths-110,basinCreationMenuButtonHeights,function(s){
         let yName;
         if(newBasinSettings.year===undefined) yName = "Current year";
         else{
@@ -501,7 +505,7 @@ UI.init = function(){
         if(yearselbox.showing) yearselbox.clicked();
     });
 
-    yearselbox = yearsel.append(false,110,0,190,30,[18,16,function(){
+    yearselbox = yearsel.append(false,110,0,basinCreationMenuButtonWidths-110,basinCreationMenuButtonHeights,[18,16,function(){
         if(yearselbox.showing){
             let v = yearselbox.value;
             let m = v.match(/^\s*(\d+)(\s+B\.?C\.?(?:E\.?)?)?(?:\s*-\s*(\d+))?(?:\s+(?:(B\.?C\.?(?:E\.?)?)|A\.?D\.?|C\.?E\.?))?\s*$/i);
@@ -523,26 +527,8 @@ UI.init = function(){
             yearselbox.hide();
         }
     }],undefined,false);
-    
-    // yearsel.append(false,0,0,20,10,function(s){ // Year increment button
-    //     s.button('',true);
-    //     triangle(2,8,10,2,18,8);
-    // },function(){
-    //     if(newBasinSettings.year===undefined){
-    //         if(newBasinSettings.hem===2) newBasinSettings.year = SHEM_DEFAULT_YEAR + 1;
-    //         else newBasinSettings.year = NHEM_DEFAULT_YEAR + 1;
-    //     }else newBasinSettings.year++;
-    // }).append(false,0,20,20,10,function(s){  // Year decrement button
-    //     s.button('',true);
-    //     triangle(2,2,18,2,10,8);
-    // },function(){
-    //     if(newBasinSettings.year===undefined){
-    //         if(newBasinSettings.hem===2) newBasinSettings.year = SHEM_DEFAULT_YEAR - 1;
-    //         else newBasinSettings.year = NHEM_DEFAULT_YEAR - 1;
-    //     }else newBasinSettings.year--;
-    // });
 
-    let gmodesel = yearsel.append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){    // Simulation mode selector
+    let gmodesel = yearsel.append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){    // Simulation mode selector
         let mode = newBasinSettings.actMode || 0;
         mode = SIMULATION_MODES[mode];
         s.button('Simulation Mode: '+mode,true);
@@ -551,38 +537,63 @@ UI.init = function(){
         if(newBasinSettings.actMode===undefined) newBasinSettings.actMode = 0;
         newBasinSettings.actMode++;
         newBasinSettings.actMode %= SIMULATION_MODES.length;
-    }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){    // Hypothetical categories selector
-        let hypo = newBasinSettings.hypoCats ? "Enabled" : "Disabled";
-        s.button('Hypothetical Categories: '+hypo,true);
+    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){    // Scale selector
+        let scale = newBasinSettings.scale || 0;
+        scale = Scale.presetScales[scale].displayName;
+        s.button('Scale: '+scale,true);
     },function(){
         yearselbox.enterFunc();
-        newBasinSettings.hypoCats = !newBasinSettings.hypoCats;
-    }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){     // Name list selector
-        let list = newBasinSettings.names || 0;
-        list = ["Atl","EPac","CPac","WPac","PAGASA","Aus","Atl 1979-1984","NIO","SWIO","SPac","SAtl","Jakarta","Port Moresby","Periodic Table","Periodic Table (Annual)"][list];
-        s.button('Name List: '+list,true);
+        if(newBasinSettings.scale===undefined) newBasinSettings.scale = 0;
+        newBasinSettings.scale++;
+        newBasinSettings.scale %= Scale.presetScales.length;
+        newBasinSettings.scaleFlavor = 0;
+        newBasinSettings.scaleColorScheme = 0;
+    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Scale flavor selector
+        let scale = newBasinSettings.scale || 0;
+        scale = Scale.presetScales[scale];
+        let flavor = newBasinSettings.scaleFlavor || 0;
+        let grey = scale.flavorDisplayNames.length<2;
+        s.button('Scale Flavor: '+(scale.flavorDisplayNames[flavor] || 'N/A'),true,18,grey);
     },function(){
         yearselbox.enterFunc();
-        if(newBasinSettings.names===undefined) newBasinSettings.names = 0;
-        newBasinSettings.names++;
-        newBasinSettings.names %= NAME_LIST_PRESETS.length;
-    }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){     // Hurricane term selector
-        let term = newBasinSettings.hurrTerm || 0;
-        s.button('Hurricane-Strength Term: '+HURRICANE_STRENGTH_TERM[term],true);
+        let scale = newBasinSettings.scale || 0;
+        scale = Scale.presetScales[scale];
+        if(scale.flavorDisplayNames.length<2) return;
+        if(newBasinSettings.scaleFlavor===undefined) newBasinSettings.scaleFlavor = 0;
+        newBasinSettings.scaleFlavor++;
+        newBasinSettings.scaleFlavor %= scale.flavorDisplayNames.length;
+    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Scale color scheme selector
+        let scale = newBasinSettings.scale || 0;
+        scale = Scale.presetScales[scale];
+        let scheme = newBasinSettings.scaleColorScheme || 0;
+        let grey = scale.colorSchemeDisplayNames.length<2;
+        s.button('Scale Color Scheme: '+(scale.colorSchemeDisplayNames[scheme] || 'N/A'),true,18,grey);
     },function(){
         yearselbox.enterFunc();
-        if(newBasinSettings.hurrTerm===undefined) newBasinSettings.hurrTerm = 0;
-        newBasinSettings.hurrTerm++;
-        newBasinSettings.hurrTerm %= HURRICANE_STRENGTH_TERM.length;
-    }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){     // Map type Selector
-        let maptype = ["Two Continents","East Continent","West Continent","Island Ocean","Central Continent","Central Inland Sea","Atlantic",'Eastern Pacific','Western Pacific','Northern Indian Ocean','Australian Region','South Pacific','South-West Indian Ocean'][newBasinSettings.mapType || 0];
+        let scale = newBasinSettings.scale || 0;
+        scale = Scale.presetScales[scale];
+        if(scale.colorSchemeDisplayNames.length<2) return;
+        if(newBasinSettings.scaleColorScheme===undefined) newBasinSettings.scaleColorScheme = 0;
+        newBasinSettings.scaleColorScheme++;
+        newBasinSettings.scaleColorScheme %= scale.colorSchemeDisplayNames.length;
+    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Designations selector
+        let ds = newBasinSettings.designations || 0;
+        ds = DesignationSystem.presetDesignationSystems[ds].displayName;
+        s.button('Designations: '+ds,true);
+    },function(){
+        yearselbox.enterFunc();
+        if(newBasinSettings.designations===undefined) newBasinSettings.designations = 0;
+        newBasinSettings.designations++;
+        newBasinSettings.designations %= DesignationSystem.presetDesignationSystems.length;
+    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Map type Selector
+        let maptype = ["Two Continents","East Continent","West Continent","Island Ocean","Central Continent","Central Inland Sea","Atlantic",'Eastern Pacific','Western Pacific','Northern Indian Ocean','Australian Region','South Pacific','South-West Indian Ocean','South Atlantic','Mediterranean'][newBasinSettings.mapType || 0];
         s.button('Map Type: '+maptype,true);
     },function(){
         yearselbox.enterFunc();
         if(newBasinSettings.mapType===undefined) newBasinSettings.mapType = 0;
         newBasinSettings.mapType++;
         newBasinSettings.mapType %= MAP_TYPES.length;
-    }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){     // God mode Selector
+    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // God mode Selector
         let gMode = newBasinSettings.godMode ? "Enabled" : "Disabled";
         s.button('God Mode: '+gMode,true);
     },function(){
@@ -590,14 +601,14 @@ UI.init = function(){
         newBasinSettings.godMode = !newBasinSettings.godMode;
     });
 
-    let seedsel = gmodesel.append(false,0,basinCreationMenuButtonSpacing,0,30,function(s){
+    let seedsel = gmodesel.append(false,0,basinCreationMenuButtonSpacing,0,basinCreationMenuButtonHeights,function(s){
         textAlign(LEFT,CENTER);
-        text('Seed:',0,15);
-    }).append(false,50,0,250,30,[18,16],function(){
+        text('Seed:',0,basinCreationMenuButtonHeights/2);
+    }).append(false,50,0,basinCreationMenuButtonWidths-50,basinCreationMenuButtonHeights,[18,16],function(){
         yearselbox.enterFunc();
     });
 
-    basinCreationMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){    // "Start" button
+    basinCreationMenu.append(false,WIDTH/2-basinCreationMenuButtonWidths/2,7*HEIGHT/8-20,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){    // "Start" button
         s.button("Start",true,20);
     },function(){
         yearselbox.enterFunc();
@@ -605,7 +616,6 @@ UI.init = function(){
         if(/^-?\d+$/g.test(seed)) newBasinSettings.seed = parseInt(seed);
         else newBasinSettings.seed = hashCode(seed);
         seedsel.value = '';
-        // init();
         let opts = {};
         if(newBasinSettings.hem===1) opts.hem = false;
         else if(newBasinSettings.hem===2) opts.hem = true;
@@ -615,11 +625,12 @@ UI.init = function(){
         for(let o of [
             'seed',
             'actMode',
-            'names',
-            'hurrTerm',
+            'designations',
             'mapType',
             'godMode',
-            'hypoCats'
+            'scale',
+            'scaleFlavor',
+            'scaleColorScheme'
         ]) opts[o] = newBasinSettings[o];
         let basin = new Basin(false,opts);
         newBasinSettings = {};
@@ -627,7 +638,7 @@ UI.init = function(){
             basin.mount();
         });
         basinCreationMenu.hide();
-    }).append(false,0,40,300,30,function(s){ // "Cancel" button
+    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){ // "Cancel" button
         s.button("Cancel",true,20);
     },function(){
         yearselbox.value = '';
@@ -666,18 +677,6 @@ UI.init = function(){
                         format: formats[i]
                     });
                 }
-                // for(let i=0;i<SAVE_SLOTS;i++){
-                //     let newStyleSaveName;
-                //     if(i===0) newStyleSaveName = AUTOSAVE_SAVE_NAME;
-                //     else newStyleSaveName = LEGACY_SAVE_NAME_PREFIX + i;
-                //     let f = localStorage.getItem(Basin.storagePrefix(i) + LOCALSTORAGE_KEY_FORMAT);
-                //     if(f!==null){
-                //         loadMenu.loadables.push({
-                //             saveName: newStyleSaveName,
-                //             format: parseInt(f,SAVING_RADIX)
-                //         });
-                //     }
-                // }
                 loadMenu.loadables.sort((a,b)=>{
                     a = a.saveName;
                     b = b.saveName;
@@ -690,15 +689,6 @@ UI.init = function(){
             console.error(e);
         });
     };
-
-    // let getslotloadable = function(s){
-    //     let l = loadMenu.loadables[s];
-    //     if(l===undefined){
-    //         let f = localStorage.getItem(Basin.storagePrefix(s) + LOCALSTORAGE_KEY_FORMAT);
-    //         l = loadMenu.loadables[s] = f===null ? 0 : f>=EARLIEST_COMPATIBLE_FORMAT ? 1 : -1;
-    //     }
-    //     return l;
-    // };
 
     let loadbuttonrender = function(s){
         let b = loadMenu.loadables[loadMenu.page*LOAD_MENU_BUTTONS_PER_PAGE+this.buttonNum];
@@ -726,7 +716,6 @@ UI.init = function(){
     let loadbuttonclick = function(){
         let b = loadMenu.loadables[loadMenu.page*LOAD_MENU_BUTTONS_PER_PAGE+this.buttonNum];
         if(b && b.format>=EARLIEST_COMPATIBLE_FORMAT){
-            // init(b.saveName);
             let basin = new Basin(b.saveName);
             basin.initialized.then(()=>{
                 basin.mount();
@@ -797,34 +786,43 @@ UI.init = function(){
         s.button("Intensity Indicator: "+b,true);
     },function(){
         simSettings.setShowStrength("toggle");
-    }).append(false,0,45,300,30,function(s){     // autosaving
+    }).append(false,0,37,300,30,function(s){     // autosaving
         let b = simSettings.doAutosave ? "Enabled" : "Disabled";
         s.button("Autosaving: "+b,true);
     },function(){
         simSettings.setDoAutosave("toggle");
-    }).append(false,0,45,300,30,function(s){     // track mode
+    }).append(false,0,37,300,30,function(s){     // track mode
         let m = ["Active TC Tracks","Full Active Tracks","Season Summary","No Tracks"][simSettings.trackMode];
         s.button("Track Mode: "+m,true);
     },function(){
         simSettings.setTrackMode("incmod",4);
         refreshTracks(true);
-    }).append(false,0,45,300,30,function(s){     // snow
+    }).append(false,0,37,300,30,function(s){     // snow
         let b = simSettings.snowLayers ? (simSettings.snowLayers*10) + " layers" : "Disabled";
         s.button("Snow: "+b,true);
     },function(){
         simSettings.setSnowLayers("incmod",floor(MAX_SNOW_LAYERS/10)+1);
         if(land) land.clearSnow();
-    }).append(false,0,45,300,30,function(s){     // shader
+    }).append(false,0,37,300,30,function(s){     // shader
         let b = simSettings.useShader ? "Enabled" : "Disabled";
         s.button("Land Shader: "+b,true);
     },function(){
         simSettings.setUseShader("toggle");
-    }).append(false,0,45,300,30,function(s){     // magnifying glass
+    }).append(false,0,37,300,30,function(s){     // magnifying glass
         let b = simSettings.showMagGlass ? "Enabled" : "Disabled";
         s.button("Magnifying Glass: "+b,true);
     },function(){
         simSettings.setShowMagGlass("toggle");
         if(UI.viewBasin) UI.viewBasin.env.updateMagGlass();
+    }).append(false,0,37,300,30,function(s){     // smooth land color
+        let b = simSettings.smoothLandColor ? "Enabled" : "Disabled";
+        s.button("Smooth Land Color: "+b,true);
+    },function(){
+        simSettings.setSmoothLandColor("toggle");
+        if(land){
+            landBuffer.clear();
+            land.drawn = false;
+        }
     });
 
     settingsMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){ // "Back" button
@@ -872,6 +870,354 @@ UI.init = function(){
             areYouSure.show();
         }
     };
+
+    // designation system editor
+
+    let refresh_desig_editor;
+
+    const define_desig_editor = ()=>{
+        const section_spacing = 36;
+        const section_heights = 28;
+        const section_width = 400;
+        const name_sections = 6;
+
+        let editing_sub_basin = DEFAULT_MAIN_SUBBASIN;
+        let desig_system;
+        let name_list_num = 0;
+        let name_list_page = 0;
+        let aux_list = false;
+        let prefix_box;
+        let suffix_box;
+        let num_affix_section;
+        let name_editor;
+        let name_edit_box;
+        let name_edit_index = 0;
+        let adding_name = false;
+
+        const refresh_num_section = ()=>{
+            if(desig_system instanceof DesignationSystem){
+                prefix_box.value = desig_system.numbering.prefix;
+                suffix_box.value = desig_system.numbering.suffix;
+            }
+            if(desig_system && desig_system.numbering.enabled)
+                num_affix_section.show();
+            else
+                num_affix_section.hide();
+        };
+        const refresh_name_section = ()=>{
+            name_list_page = 0;
+        };
+        refresh_desig_editor = ()=>{
+            let sb = UI.viewBasin.subBasins[editing_sub_basin];
+            if(sb && sb.designationSystem)
+                desig_system = sb.designationSystem;
+            name_list_num = 0;
+            aux_list = false;
+            refresh_num_section();
+            refresh_name_section();
+        };
+
+        const get_list = ()=>{
+            if(desig_system instanceof DesignationSystem){
+                let list;
+                if(aux_list)
+                    list = desig_system.naming.auxiliaryLists[name_list_num];
+                else
+                    list = desig_system.naming.mainLists[name_list_num];
+                return list;
+            }
+        };
+        const name_at = (i)=>{
+            let txt;
+            let list = get_list();
+            if(list && list[i])
+                txt = list[i];
+            return txt;
+        };
+        const invoke_name_editor = (i,is_new_name)=>{
+            let list = get_list();
+            if(list){
+                name_edit_index = i;
+                if(is_new_name)
+                    name_edit_box.value = '';
+                else
+                    name_edit_box.value = list[i];
+                adding_name = is_new_name;
+                name_editor.show();
+                name_edit_box.clicked();
+            }
+        };
+
+        // title text
+        desigSystemEditor.append(false,WIDTH/2,HEIGHT/16,0,0,s=>{
+            fill(COLORS.UI.text);
+            noStroke();
+            textAlign(CENTER,CENTER);
+            textSize(36);
+            text("Designations Editor",0,0);
+        });
+
+        // sub-basin selector
+        let sb_selector = desigSystemEditor.append(false,WIDTH/2-section_width/2,HEIGHT/8,section_width,0,s=>{
+            let txt = 'Editing sub-basin: ';
+            let sb = UI.viewBasin.subBasins[editing_sub_basin];
+            if(sb instanceof SubBasin)
+                txt += sb.getDisplayName();
+            textAlign(CENTER,CENTER);
+            textSize(18);
+            text(txt,section_width/2,section_heights/2);
+        });
+        
+        sb_selector.append(false,0,0,30,10,s=>{ // next sub-basin button
+            s.button('',true);
+            triangle(15,2,23,8,7,8);
+        },()=>{
+            do{
+                editing_sub_basin++;
+                if(editing_sub_basin > 255)
+                    editing_sub_basin = 0;
+            }while(!(UI.viewBasin.subBasins[editing_sub_basin] instanceof SubBasin));
+            refresh_desig_editor();
+        }).append(false,0,18,30,10,s=>{ // prev sub-basin button
+            s.button('',true);
+            triangle(15,8,23,2,7,2);
+        },()=>{
+            do{
+                editing_sub_basin--;
+                if(editing_sub_basin < 0)
+                    editing_sub_basin = 255;
+            }while(!(UI.viewBasin.subBasins[editing_sub_basin] instanceof SubBasin));
+            refresh_desig_editor();
+        });
+
+        // numbering enabled/disabled button
+        let num_button = sb_selector.append(false,0,section_spacing,section_width,section_heights,s=>{
+            let txt = 'Numbering: ';
+            let grey = false;
+            if(desig_system instanceof DesignationSystem){
+                if(desig_system.numbering.enabled)
+                    txt += 'Enabled';
+                else
+                    txt += 'Disabled';
+            }
+            else{
+                txt += 'N/A';
+                grey = true;
+            }
+            s.button(txt,true,18,grey);
+        },()=>{
+            if(desig_system instanceof DesignationSystem){
+                desig_system.numbering.enabled = !desig_system.numbering.enabled;
+                refresh_num_section();
+            }
+        });
+
+        num_affix_section = num_button.append(false,0,section_spacing,0,0);
+
+        // numbering prefix box
+        prefix_box = num_affix_section.append(false,0,0,0,0,s=>{
+            textAlign(LEFT,CENTER);
+            text('Prefix:',0,section_heights/2);
+        }).append(false,70,0,section_width/2-75,section_heights,[18,6,()=>{
+            if(desig_system instanceof DesignationSystem && desig_system.numbering.enabled)
+                desig_system.numbering.prefix = prefix_box.value;
+        }]);
+
+        // numbering suffix box
+        suffix_box = num_affix_section.append(false,section_width/2+5,0,0,0,s=>{
+            textAlign(LEFT,CENTER);
+            text('Suffix:',0,section_heights/2);
+        }).append(false,70,0,section_width/2-75,section_heights,[18,6,()=>{
+            if(desig_system instanceof DesignationSystem && desig_system.numbering.enabled)
+                desig_system.numbering.suffix = suffix_box.value;
+        }]);
+
+        // name list selector
+        let list_selector = num_button.append(false,0,section_spacing*2,section_width,0,s=>{
+            let txt = `Editing name list:${aux_list ? ' Aux.' : ''} List ${name_list_num + 1}`;
+            text(txt,section_width/2,section_heights/2);
+        });
+
+        list_selector.append(false,0,0,30,10,s=>{ // next name list button
+            s.button('',true);
+            triangle(15,2,23,8,7,8);
+        },()=>{
+            if(desig_system instanceof DesignationSystem){
+                name_list_num++;
+                if(!aux_list && name_list_num >= desig_system.naming.mainLists.length){
+                    if(desig_system.naming.auxiliaryLists.length > 0)
+                        aux_list = true;
+                    name_list_num = 0;
+                }else if(aux_list && name_list_num >= desig_system.naming.auxiliaryLists.length){
+                    if(desig_system.naming.mainLists.length > 0)
+                        aux_list = false;
+                    name_list_num = 0;
+                }
+                refresh_name_section();
+            }
+        }).append(false,0,18,30,10,s=>{ // prev name list button
+            s.button('',true);
+            triangle(15,8,23,2,7,2);
+        },()=>{
+            if(desig_system instanceof DesignationSystem){
+                name_list_num--;
+                if(name_list_num < 0){
+                    if(aux_list){
+                        if(desig_system.naming.mainLists.length > 0){
+                            aux_list = false;
+                            name_list_num = desig_system.naming.mainLists.length - 1;
+                        }else
+                            name_list_num = desig_system.naming.auxiliaryLists.length - 1;
+                    }else{
+                        if(desig_system.naming.auxiliaryLists.length > 0){
+                            aux_list = true;
+                            name_list_num = desig_system.naming.auxiliaryLists.length - 1;
+                        }else
+                            name_list_num = desig_system.naming.mainLists.length - 1;
+                    }
+                }
+                refresh_name_section();
+            }
+        });
+
+        const add_name_edit_section = (prev,i)=>{
+            const my_width = section_width - 80;
+            const index = ()=>name_list_page * name_sections + i;
+
+            let section = prev.append(false,0,section_spacing,my_width,section_heights,s=>{
+                let txt = '--';
+                let grey = true;
+                let name = name_at(index());
+                if(name){
+                    txt = name;
+                    grey = false;
+                }
+                s.button(txt,true,18,grey);
+            },()=>{
+                let name = name_at(index());
+                if(name)
+                    invoke_name_editor(index(),false);
+            });
+
+            section.append(false,my_width+10,0,30,12,s=>{
+                let grey = true;
+                let list = get_list();
+                if(list && index() <= list.length)
+                    grey = false;
+                s.button('+',true,15,grey);
+                triangle(25,3,28,10,22,10);
+            },()=>{
+                let list = get_list();
+                if(list && index() <= list.length)
+                    invoke_name_editor(index(), true);
+            }).append(false,0,section_heights-12,30,12,s=>{
+                let grey = true;
+                let list = get_list();
+                if(list && (index() + 1) <= list.length)
+                    grey = false;
+                s.button('+',true,15,grey);
+                triangle(25,9,28,2,22,2);
+            },()=>{
+                let list = get_list();
+                if(list && (index() + 1) <= list.length)
+                    invoke_name_editor(index() + 1, true);
+            });
+
+            section.append(false,my_width+50,0,30,section_heights,s=>{
+                let grey = !name_at(index());
+                s.button('X',true,21,grey);
+            },()=>{
+                if(name_at(index())){
+                    let list = get_list();
+                    list.splice(index(),1);
+                    if(list.length <= name_list_page * name_sections && list.length > 0)
+                        name_list_page--;
+                }
+            });
+            return section;
+        };
+
+        for(let i = 0, prev = list_selector; i < name_sections; i++){
+            prev = add_name_edit_section(prev,i);
+        }
+
+        let list_nav = list_selector.append(false,0,section_spacing * (name_sections + 1),0,0);
+
+        list_nav.append(false,section_width/2-40,0,30,section_heights,s=>{
+            let grey = true;
+            if(name_list_page > 0)
+                grey = false;
+            s.button('',true,18,grey);
+            triangle(4,14,26,4,26,24);
+        },()=>{
+            if(name_list_page > 0)
+                name_list_page--;
+        }).append(false,50,0,30,section_heights,s=>{
+            let grey = true;
+            let list = get_list();
+            if(list && (name_list_page + 1) * name_sections < list.length)
+                grey = false;
+            s.button('',true,18,grey);
+            triangle(26,14,4,4,4,24);
+        },()=>{
+            let list = get_list();
+            if(list && (name_list_page + 1) * name_sections < list.length)
+                name_list_page++;
+        });
+
+        desigSystemEditor.append(false,WIDTH/2-section_width/2,7*HEIGHT/8+10,section_width,section_heights,function(s){ // "Done" button
+            s.button("Done",true,20);
+        },function(){
+            prefix_box.enterFunc();
+            suffix_box.enterFunc();
+            editing_sub_basin = DEFAULT_MAIN_SUBBASIN;
+            aux_list = false;
+            name_list_num = 0;
+            name_list_page = 0;
+            desigSystemEditor.hide();
+            if(UI.viewBasin instanceof Basin)
+                primaryWrapper.show();
+            else
+                mainMenu.show();
+        });
+
+        name_editor = desigSystemEditor.append(false,0,0,WIDTH,HEIGHT,s=>{
+            fill(COLORS.UI.box);
+            noStroke();
+            s.fullRect();
+        },true,false);
+
+        name_editor.append(false,WIDTH/2,HEIGHT/4,0,0,s=>{
+            fill(COLORS.UI.text);
+            noStroke();
+            textAlign(CENTER,CENTER);
+            textSize(24);
+            text("Add/Edit Name",0,0);
+        });
+
+        name_edit_box = name_editor.append(false, WIDTH/2-section_width/2, HEIGHT/3, section_width, section_heights, [20, 15, ()=>{
+            let list = get_list();
+            if(list && name_edit_box.value){
+                if(adding_name)
+                    list.splice(name_edit_index,0,name_edit_box.value);
+                else
+                    list[name_edit_index] = name_edit_box.value;
+            }
+            name_editor.hide();
+        }]);
+
+        name_edit_box.append(false, 0, section_spacing, section_width, section_heights, s=>{
+            s.button('Done',true,20);
+        },()=>{
+            name_edit_box.enterFunc();
+        }).append(false, 0, section_spacing, section_width, section_heights, s=>{
+            s.button('Cancel',true,20);
+        },()=>{
+            name_editor.hide();
+        });
+    };
+
+    define_desig_editor();
 
     // primary "in sim" scene
 
@@ -1049,11 +1395,6 @@ UI.init = function(){
         rect(3,6,18,2);
         rect(3,11,18,2);
         rect(3,16,18,2);
-        // if(storageQuotaExhausted){
-        //     fill(COLORS.UI.redText);
-        //     textAlign(CENTER,TOP);
-        //     text("!",24,3);
-        // }
     },function(){
         sideMenu.toggleShow();
         saveBasinAsPanel.hide();
@@ -1063,7 +1404,7 @@ UI.init = function(){
         let red = false;
         if(basin.env.displaying!==-1){
             let f = basin.env.fieldList[basin.env.displaying];
-            txtStr += f + " -- ";
+            txtStr += basin.env.getDisplayName(f) + " -- ";
             let x;
             let y;
             let S = selectedStorm && selectedStorm.aliveAt(viewTick);
@@ -1082,13 +1423,10 @@ UI.init = function(){
                 if(v===null){
                     txtStr += "Unavailable";
                     red = true;
-                }else if(basin.env.fields[f].isVectorField){
-                    let m = v.mag();
-                    let h = v.heading();
-                    txtStr += "(a: " + (round(h*1000)/1000) + ", m: " + (round(m*1000)/1000) + ")";
-                }else txtStr += round(v*1000)/1000;
+                }else
+                    txtStr += basin.env.formatFieldValue(f,v);
             }
-            txtStr += " @ " + (S ? "selected storm" : "mouse pointer / finger");
+            txtStr += " @ " + (S ? "selected storm" : "pointer");
             if(viewTick<=basin.env.fields[f].accurateAfter){
                 txtStr += ' [MAY BE INACCURATE]';
                 red = true;
@@ -1107,7 +1445,32 @@ UI.init = function(){
         UI.viewBasin.env.displayNext();
     });
 
-    bottomBar.append(false,WIDTH-29,3,24,24,function(s){  // Help button
+    bottomBar.append(false,WIDTH-29,3,24,24,function(s){    // Fullscreen button
+        s.button('',false);
+        stroke(0);
+        if(document.fullscreenElement===canvas){
+            line(9,4,9,9);
+            line(4,9,9,9);
+            line(15,4,15,9);
+            line(20,9,15,9);
+            line(9,20,9,15);
+            line(4,15,9,15);
+            line(15,20,15,15);
+            line(20,15,15,15);
+        }else{
+            line(4,4,4,9);
+            line(4,4,9,4);
+            line(20,4,20,9);
+            line(20,4,15,4);
+            line(4,20,4,15);
+            line(4,20,9,20);
+            line(20,20,20,15);
+            line(20,20,15,20);
+        }
+    },function(){
+        toggleFullscreen();
+    }).append(false,-29,0,24,24,function(s){  // Help button
+        noStroke();
         s.button("?",false,22);
     },function(){
         helpBox.toggleShow();
@@ -1129,15 +1492,24 @@ UI.init = function(){
             text(n,this.width/2,35);
             textSize(15);
             let txt = "";
-            let formTime;
-            let dissTime;
-            if(S.TC){
-                formTime = formatDate(UI.viewBasin.tickMoment(S.formationTime));
-                dissTime = formatDate(UI.viewBasin.tickMoment(S.dissipationTime));
-                txt += "Dates active: " + formTime + " - " + (S.dissipationTime ? dissTime : "currently active");
-            }else txt += "Dates active: N/A";
+            txt += 'Dates active: ';
+            if(S.inBasinTC){
+                let enterTime = formatDate(UI.viewBasin.tickMoment(S.enterTime));
+                let exitTime = formatDate(UI.viewBasin.tickMoment(S.exitTime));
+                txt += enterTime;
+                if(S.enterTime>S.formationTime) txt += ' (entered basin)';
+                txt += ' - ';
+                if(S.exitTime){
+                    txt += exitTime;
+                    if(!S.dissipationTime || S.exitTime<S.dissipationTime) txt += ' (left basin)';
+                }else txt += 'currently active';
+            }else if(S.TC){
+                let formTime = formatDate(UI.viewBasin.tickMoment(S.formationTime));
+                let dissTime = formatDate(UI.viewBasin.tickMoment(S.dissipationTime));
+                txt += formTime + " - " + (S.dissipationTime ? dissTime : "currently active");
+            }else txt += "N/A";
             txt += "\nPeak pressure: " + (S.peak ? S.peak.pressure : "N/A");
-            txt += "\nWind speed @ peak: " + (S.peak ? S.peak.windSpeed + " kts" : "N/A");
+            txt += "\nPeak wind speed: " + (S.windPeak ? S.windPeak.windSpeed + " kts" : "N/A");
             txt += "\nACE: " + S.ACE;
             txt += "\nDamage: " + damageDisplayNumber(S.damage);
             txt += "\nDeaths: " + S.deaths;
@@ -1152,20 +1524,16 @@ UI.init = function(){
             textSize(15);
             let se = UI.viewBasin.fetchSeason(S);
             let txt;
-            if(se){
-                txt = "Depressions: " + se.depressions;
-                txt += "\nNamed storms: " + se.namedStorms;
-                txt += "\n" + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + se.hurricanes;
-                txt += "\nMajor " + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + se.majors;
-                if(UI.viewBasin.hypoCats){
-                    txt += '\nCategory 5+: ' + se.c5s;
-                    txt += '\nCategory 8+: ' + se.c8s;
-                    txt += '\n' + HYPERCANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + 's: ' + se.hypercanes;
-                }else txt += "\nCategory 5s: " + se.c5s;
-                txt += "\nTotal ACE: " + se.ACE;
-                txt += "\nDamage: " + damageDisplayNumber(se.damage);
-                txt += "\nDeaths: " + se.deaths;
-                txt += "\nLandfalls: " + se.landfalls;
+            if(se instanceof Season){
+                let stats = se.stats(DEFAULT_MAIN_SUBBASIN);
+                let c = stats.classificationCounters;
+                let scale = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN);
+                txt = '';
+                for(let {statName, cNumber} of scale.statDisplay()) txt += statName + ': ' + c[cNumber] + '\n';
+                txt += "Total ACE: " + stats.ACE;
+                txt += "\nDamage: " + damageDisplayNumber(stats.damage);
+                txt += "\nDeaths: " + stats.deaths;
+                txt += "\nLandfalls: " + stats.landfalls;
             }else txt = "Season Data Unavailable";
             txt = wrapText(txt,txtW);
             text(txt,this.width/2,35+nh);
@@ -1197,7 +1565,9 @@ UI.init = function(){
             let s = stormInfoPanel.target;
             let t;
             if(s instanceof Storm){
-                t = s.birthTime;
+                if(s.enterTime) t = s.enterTime;
+                else if(s.formationTime) t = s.formationTime;
+                else t = s.birthTime;
                 t = ceil(t/ADVISORY_TICKS)*ADVISORY_TICKS;
             }else{
                 t = UI.viewBasin.seasonTick(s);
@@ -1223,17 +1593,17 @@ UI.init = function(){
                 let beginSeasonTick;
                 let endSeasonTick;
                 for(let sys of s.forSystems()){
-                    if(sys.TC && (UI.viewBasin.getSeason(sys.formationTime)===target || UI.viewBasin.getSeason(sys.formationTime)<target && (sys.dissipationTime===undefined || UI.viewBasin.getSeason(sys.dissipationTime-1)>=target))){
+                    if(sys.inBasinTC && (UI.viewBasin.getSeason(sys.enterTime)===target || UI.viewBasin.getSeason(sys.enterTime)<target && (sys.exitTime===undefined || UI.viewBasin.getSeason(sys.exitTime-1)>=target))){
                         TCs.push(sys);
-                        let dissTime = sys.dissipationTime || UI.viewBasin.tick;
-                        if(beginSeasonTick===undefined || sys.formationTime<beginSeasonTick) beginSeasonTick = sys.formationTime;
+                        let dissTime = sys.exitTime || UI.viewBasin.tick;
+                        if(beginSeasonTick===undefined || sys.enterTime<beginSeasonTick) beginSeasonTick = sys.enterTime;
                         if(endSeasonTick===undefined || dissTime>endSeasonTick) endSeasonTick = dissTime;
                     }
                 }
                 for(let n=0;n<TCs.length-1;n++){
                     let t0 = TCs[n];
                     let t1 = TCs[n+1];
-                    if(t0.formationTime>t1.formationTime){
+                    if(t0.enterTime>t1.enterTime){
                         TCs[n] = t1;
                         TCs[n+1] = t0;
                         if(n>0) n -= 2;
@@ -1249,50 +1619,23 @@ UI.init = function(){
                 tb.months = eMoment.diff(sMoment,'months') + 1;
                 for(let t of TCs){
                     let part = {};
+                    part.storm = t;
                     part.segments = [];
-                    // part.label = t.named ?
-                    //     ({
-                    //         'Alpha':'\u03B1',
-                    //         'Beta':'\u03B2',
-                    //         'Gamma':'\u03B3',
-                    //         'Delta':'\u03B4',
-                    //         'Epsilon':'\u03B5',
-                    //         'Zeta':'\u03B6',
-                    //         'Eta':'\u03B7',
-                    //         'Theta':'\u03B8',
-                    //         'Iota':'\u03B9',
-                    //         'Kappa':'\u03BA',
-                    //         'Lambda':'\u03BB',
-                    //         'Mu':'\u03BC',
-                    //         'Nu':'\u03BD',
-                    //         'Xi':'\u03BE',
-                    //         'Omicron':'\u03BF',
-                    //         'Pi':'\u03C0',
-                    //         'Rho':'\u03C1',
-                    //         'Sigma':'\u03C3',
-                    //         'Tau':'\u03C4',
-                    //         'Upsilon':'\u03C5',
-                    //         'Phi':'\u03C6',
-                    //         'Chi':'\u03C7',
-                    //         'Psi':'\u03C8',
-                    //         'Omega':'\u03C9'
-                    //     })[t.name] || t.name.slice(0,1) :
-                    //     t.depressionNum + '';
                     part.label = t.getNameByTick(-2);
                     let aSegment;
                     for(let q=0;q<t.record.length;q++){
                         let rt = ceil(t.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS + q*ADVISORY_TICKS;
                         let d = t.record[q];
                         if(tropOrSub(d.type)&&land.inBasin(d.pos.x,d.pos.y)){
-                            let cat = d.getCat();
+                            let clsn = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).get(d);
                             if(!aSegment){
                                 aSegment = {};
                                 part.segments.push(aSegment);
                                 aSegment.startTick = rt;
-                                aSegment.maxCat = cat;
+                                aSegment.maxCat = clsn;
                                 aSegment.fullyTrop = (d.type===TROP);
                             }
-                            if(cat > aSegment.maxCat) aSegment.maxCat = cat;
+                            if(clsn > aSegment.maxCat) aSegment.maxCat = clsn;
                             aSegment.fullyTrop = aSegment.fullyTrop || (d.type===TROP);
                             aSegment.endTick = rt;
                         }else if(aSegment) aSegment = undefined;
@@ -1304,16 +1647,18 @@ UI.init = function(){
                     }
                     let rowFits;
                     part.row = -1;
-                    let labelZone = 20;
+                    textSize(12);
+                    let thisLabelZone = textWidth(part.label) + 6;
                     do{
                         part.row++;
                         rowFits = true;
                         for(let q=0;q<tb.parts.length;q++){
                             let p = tb.parts[q];
+                            let otherLabelZone = textWidth(p.label) + 6;
                             let thisS = part.segments[0].startX;
-                            let thisE = part.segments[part.segments.length-1].endX + labelZone;
+                            let thisE = part.segments[part.segments.length-1].endX + thisLabelZone;
                             let otherS = p.segments[0].startX;
-                            let otherE = p.segments[p.segments.length-1].endX + labelZone;
+                            let otherE = p.segments[p.segments.length-1].endX + otherLabelZone;
                             if(p.row===part.row){
                                 if(thisS>=otherS && thisS<=otherE ||
                                     thisE>=otherS && thisE<=otherE ||
@@ -1343,7 +1688,7 @@ UI.init = function(){
 
     timelineBox = primaryWrapper.append(false,WIDTH/16,HEIGHT/4,7*WIDTH/8,HEIGHT/2,function(s){
         let target = stormInfoPanel.target;
-        if(target!==this.builtFor || (target===UI.viewBasin.getSeason(-1) && UI.viewBasin.tick!==this.builtAt)) buildtimeline();
+        if(target!==this.builtFor || (UI.viewBasin.tick!==this.builtAt && (UI.viewBasin.getSeason(this.builtAt)===target || UI.viewBasin.getSeason(this.builtAt)===(target+1)))) buildtimeline();
         fill(COLORS.UI.box);
         noStroke();
         s.fullRect();
@@ -1378,19 +1723,40 @@ UI.init = function(){
         for(let i=0;i<this.parts.length;i++){
             let p = this.parts[i];
             let y = tBound+p.row*15;
+            let mx = getMouseX()-this.getX();
+            let my = getMouseY()-this.getY();
+            textSize(12);
+            if(mx>=lBound+p.segments[0].startX && mx<lBound+p.segments[p.segments.length-1].endX+textWidth(p.label)+6 && my>=y && my<y+10) stroke(255);
+            else noStroke();
             for(let j=0;j<p.segments.length;j++){
                 let S = p.segments[j];
-                if(S.fullyTrop) fill(getColor(S.maxCat,TROP));
-                else fill(getColor(S.maxCat,SUBTROP));
+                fill(UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).getColor(S.maxCat,!S.fullyTrop));
                 rect(lBound+S.startX,y,max(S.endX-S.startX,1),10);
             }
             let labelLeftBound = lBound + p.segments[p.segments.length-1].endX;
             fill(COLORS.UI.text);
             textAlign(LEFT,CENTER);
-            textSize(12);
-            text(p.label,labelLeftBound+5,y+5);
+            text(p.label,labelLeftBound+3,y+5);
         }
-    },true,false);
+    },function(){
+        let w = this.width;
+        let h = this.height;
+        let lBound = w*0.05;
+        let tBound = h*0.2;
+        let newTarget;
+        for(let i=this.parts.length-1;i>=0;i--){
+            let p = this.parts[i];
+            let y = tBound+p.row*15;
+            let mx = getMouseX()-this.getX();
+            let my = getMouseY()-this.getY();
+            textSize(12);
+            if(mx>=lBound+p.segments[0].startX && mx<lBound+p.segments[p.segments.length-1].endX+textWidth(p.label)+6 && my>=y && my<y+10){
+                newTarget = p.storm;
+                break;
+            }
+        }
+        if(newTarget) stormInfoPanel.target = newTarget;
+    },false);
 
     timelineBox.months = 12;
     timelineBox.sMonth = 0;
@@ -1412,6 +1778,10 @@ UI.init = function(){
         land.clear();
         timelineBox.builtAt = -1;
         for(let t in UI.viewBasin.seasonExpirationTimers) clearTimeout(UI.viewBasin.seasonExpirationTimers[t]);
+        for(let s in UI.viewBasin.subBasins){
+            let sb = UI.viewBasin.subBasins[s];
+            if(sb instanceof SubBasin && sb.mapOutline) sb.mapOutline.remove();
+        }
         let wait = ()=>{
             UI.viewBasin = undefined;
             mainMenu.show();
@@ -1428,22 +1798,15 @@ UI.init = function(){
         textAlign(CENTER,TOP);
         textSize(18);
         text("Menu",this.width/2,10);
-        // if(storageQuotaExhausted){
-        //     textSize(14);
-        //     fill(COLORS.UI.redText);
-        //     text("localStorage quota for origin\n" + origin + "\nexceeded; unable to save",this.width/2,this.height-60);
-        // }
     },true,false);
 
     sideMenu.append(false,5,30,sideMenu.width-10,25,function(s){ // Save and return to main menu button
-        s.button("Save and Return to Main Menu",false,15/* ,storageQuotaExhausted */);
+        s.button("Save and Return to Main Menu",false,15);
     },function(){
-        // if(!storageQuotaExhausted){
-            if(UI.viewBasin.saveName===AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke(true);
-            else{
-                returntomainmenu(UI.viewBasin.save());
-            }
-        // }
+        if(UI.viewBasin.saveName===AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke(true);
+        else{
+            returntomainmenu(UI.viewBasin.save());
+        }
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Return to main menu w/o saving button
         s.button("Return to Main Menu w/o Saving",false,15);
     },function(){
@@ -1451,21 +1814,26 @@ UI.init = function(){
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Save basin button
         let txt = "Save Basin";
         if(UI.viewBasin.tick===UI.viewBasin.lastSaved) txt += " [Saved]";
-        s.button(txt,false,15/* ,storageQuotaExhausted */);
+        s.button(txt,false,15);
     },function(){
-        // if(!storageQuotaExhausted){
-            if(UI.viewBasin.saveName===AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke();
-            else UI.viewBasin.save();
-        // }
+        if(UI.viewBasin.saveName===AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke();
+        else UI.viewBasin.save();
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Save basin as button
-        s.button("Save Basin As...",false,15/* ,storageQuotaExhausted */);
+        s.button("Save Basin As...",false,15);
     },function(){
-        /* if(!storageQuotaExhausted) */ saveBasinAsPanel.invoke();
+        saveBasinAsPanel.invoke();
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Settings menu button
         s.button("Settings",false,15);
     },function(){
         primaryWrapper.hide();
         settingsMenu.show();
+        paused = true;
+    }).append(false,0,30,sideMenu.width-10,25,function(s){   // Designation system editor menu button
+        s.button("Edit Designations",false,15);
+    },function(){
+        refresh_desig_editor();
+        primaryWrapper.hide();
+        desigSystemEditor.show();
         paused = true;
     }).append(false,0,30,sideMenu.width-10,25,function(s){  // Basin seed button
         s.button('Basin Seed',false,15);
@@ -1519,41 +1887,6 @@ UI.init = function(){
         saveBasinAsPanel.toggleShow();
         saveBasinAsTextBox.value = UI.viewBasin.saveName===AUTOSAVE_SAVE_NAME ? '' : UI.viewBasin.saveName;
     };
-    
-    // let saveslotbuttonrender = function(s){
-    //     let slotOccupied = getslotloadable(this.slotNum);
-    //     let txt = "Slot " + this.slotNum;
-    //     if(basin.saveSlot===this.slotNum) txt += " [This]";
-    //     else if(slotOccupied) txt += " [Overwrite]";
-    //     s.button(txt,false,15,storageQuotaExhausted);
-    // };
-
-    // let saveslotbuttonclick = function(){
-    //     if(!storageQuotaExhausted){
-    //         if(basin.saveSlot===this.slotNum){
-    //             basin.save();
-    //             loadMenu.loadables = {};
-    //             saveBasinAsPanel.hide();
-    //         }else{
-    //             let slotOccupied = getslotloadable(this.slotNum);
-    //             let f = ()=>{
-    //                 basin.saveAs(this.slotNum);
-    //                 loadMenu.loadables = {};
-    //                 saveBasinAsPanel.hide();
-    //                 if(saveBasinAsPanel.exit) returntomainmenu();
-    //             };
-    //             if(slotOccupied) areYouSure.dialog(f);
-    //             else f();
-    //         }
-    //     }
-    // };
-
-    // for(let i=1;i<SAVE_SLOTS;i++){  // 1-indexed as to not include the autosave slot 0
-    //     let x = i===1 ? 5 : 0;
-    //     let y = i===1 ? 40 : 30;
-    //     let b = saveBasinAsPanel.append(0,x,y,saveBasinAsPanel.width-10,25,saveslotbuttonrender,saveslotbuttonclick);
-    //     b.slotNum = i;
-    // }
 
     seedBox = primaryWrapper.append(false,WIDTH/2-100,HEIGHT/2-15,200,30,[18,undefined,function(){  // textbox for copying the basin seed
         this.value = UI.viewBasin.seed.toString();
@@ -1688,9 +2021,9 @@ function changeViewTick(t){
     });
 }
 
-function deviceTurned(){
-    toggleFullscreen();
-}
+// function deviceTurned(){
+//     toggleFullscreen();
+// }
 
 function wrapText(str,w){
     let newStr = "";
@@ -1750,6 +2083,67 @@ function ktsToKmh(k,rnd){
     let val = k*1.852;
     if(rnd) val = round(val/rnd)*rnd;
     return val;
+}
+
+function oneMinToTenMin(w,rnd){
+    let val = w*7/8;    // simple ratio
+    if(rnd) val = round(val/rnd)*rnd;
+    return val;
+}
+
+function mbToInHg(mb,rnd){
+    let val = mb*0.02953;
+    if(rnd) val = round(val/rnd)*rnd;
+    return val;
+}
+
+// converts a radians-from-east angle into a degrees-from-north heading with compass direction for display formatting
+function compassHeading(rad){
+    // force rad into range of zero to two-pi
+    if(rad < 0)
+        rad = 2*PI - (-rad % (2*PI));
+    else
+        rad = rad % (2*PI);
+    // convert heading from radians-from-east to degrees-from-north
+    let heading = map(rad,0,2*PI,90,450) % 360;
+    let compass;
+    // calculate compass direction
+    if(heading < 11.25)
+        compass = 'N';
+    else if(heading < 33.75)
+        compass = 'NNE';
+    else if(heading < 56.25)
+        compass = 'NE';
+    else if(heading < 78.75)
+        compass = 'ENE';
+    else if(heading < 101.25)
+        compass = 'E';
+    else if(heading < 123.75)
+        compass = 'ESE';
+    else if(heading < 146.25)
+        compass = 'SE';
+    else if(heading < 168.75)
+        compass = 'SSE';
+    else if(heading < 191.25)
+        compass = 'S';
+    else if(heading < 213.75)
+        compass = 'SSW';
+    else if(heading < 236.25)
+        compass = 'SW';
+    else if(heading < 258.75)
+        compass = 'WSW';
+    else if(heading < 281.25)
+        compass = 'W';
+    else if(heading < 303.75)
+        compass = 'WNW';
+    else if(heading < 326.25)
+        compass = 'NW';
+    else if(heading < 348.75)
+        compass = 'NNW';
+    else
+        compass = 'N';
+    heading = round(heading);
+    return heading + '\u00B0 '/* degree sign */ + compass;
 }
 
 function damageDisplayNumber(d){

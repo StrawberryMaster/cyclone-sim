@@ -4,7 +4,9 @@ function refreshTracks(force){
     forecastTracks.clear();
     if(selectedStorm) selectedStorm.renderTrack();
     else if(simSettings.trackMode===2){
-        for(let s of UI.viewBasin.fetchSeason(viewTick,true,true).forSystems()) if(s.TC) s.renderTrack();
+        let target = UI.viewBasin.getSeason(viewTick);
+        let valid = sys=>(sys.inBasinTC && (UI.viewBasin.getSeason(sys.enterTime)===target || UI.viewBasin.getSeason(sys.enterTime)<target && (sys.exitTime===undefined || UI.viewBasin.getSeason(sys.exitTime-1)>=target)));
+        for(let s of UI.viewBasin.fetchSeason(viewTick,true,true).forSystems()) if(valid(s)) s.renderTrack();
     }else if(UI.viewBasin.viewingPresent()) for(let s of UI.viewBasin.activeSystems) s.fetchStorm().renderTrack();
     else for(let s of UI.viewBasin.fetchSeason(viewTick,true,true).forSystems()) s.renderTrack();
 }
@@ -40,12 +42,17 @@ function toggleFullscreen(){
             scaler = displayWidth/WIDTH;
             rescaleCanvases(scaler);
             if(UI.viewBasin){
-                // land.clear();
                 refreshTracks(true);
                 UI.viewBasin.env.displayLayer();
             }
         });
     }
+}
+
+function fullDimensions(){
+    let fullW = deviceOrientation===PORTRAIT ? displayHeight : displayWidth;
+    let fullH = fullW*HEIGHT/WIDTH;
+    return {fullW, fullH};
 }
 
 function drawBuffer(b){
@@ -109,22 +116,43 @@ function loadImg(path){     // wrap p5.loadImage in a promise
 // waitForAsyncProcess allows the simulator to wait for things to load; unneeded for saving
 function waitForAsyncProcess(func,desc,...args){  // add .then() callbacks inside of func before returning the promise, but add .catch() to the returned promise of waitForAsyncProcess
     waitingFor++;
-    if(waitingFor<2){
-        waitingDesc = desc;
+    if(waitingFor<2)
         waitingTCSymbolSHem = random()<0.5;
+    let descIndex = waitingDescs.lowestAvailable;
+    if(descIndex > waitingDescs.maxIndex)
+        waitingDescs.maxIndex = descIndex;
+    for(let i=descIndex+1;i<=waitingDescs.maxIndex+1;i++){
+        if(!waitingDescs[i]){
+            waitingDescs.lowestAvailable = i;
+            break;
+        }
     }
-    else waitingDesc = "Waiting...";
+    waitingDescs[descIndex] = desc;
+    let endWait = ()=>{
+        waitingFor--;
+        waitingDescs[descIndex] = undefined;
+        if(descIndex < waitingDescs.lowestAvailable)
+            waitingDescs.lowestAvailable = descIndex;
+        if(descIndex >= waitingDescs.maxIndex){
+            for(let i=descIndex;i>=-1;i--){
+                if(i<0 || waitingDescs[i]){
+                    waitingDescs.maxIndex = i;
+                    break;
+                }
+            }
+        }
+    };
     let p = func(...args);
     if(p instanceof Promise || p instanceof Dexie.Promise){
         return p.then(v=>{
-            waitingFor--;
+            endWait();
             return v;
         }).catch(e=>{
-            waitingFor--;
+            endWait();
             throw e;
         });
     }
-    waitingFor--;
+    endWait();
     return Promise.resolve(p);
 }
 
@@ -212,7 +240,6 @@ document.onfullscreenchange = function(){
         scaler = 1;
         rescaleCanvases(scaler);
         if(UI.viewBasin){
-            // land.clear();
             refreshTracks(true);
             UI.viewBasin.env.displayLayer();
         }

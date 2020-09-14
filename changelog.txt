@@ -1,7 +1,109 @@
 About: A p5.js tropical cyclone simulation game
 
-v20191031a:
-    + Mona has taken over.
+v0.3.3 (2020-08-19):
+    + Added fullscreen button to bottom UI bar
+    * Fullscreen no longer activated by device turns on mobile devices
+v0.3.2 (2020-07-25):
+    * Updated Western Pacific names with replacements for 2018
+v0.3.1 (2020-06-26):
+    + Added designations editor
+        > Accessible from side menu
+        > Can enable/disable numbering
+        > Can change numbering prefix/suffix
+        > Can add, remove, and edit names for all lists
+v0.3 (2020-06-16):
+    * Environmental field map layers now have real display names and better unit formatting in the bottom bar
+        > "u/hr" is a crumby velocity unit based in coordinate units for now
+    * Shear map layer now features colored arrows
+    * Under-the-hood changes to storm algorithm and spawn rules so they're more flexibly-defined for different simulation modes
+    * Experimental Mode now experimenting with a weird new storm algorithm
+v0.2.12 (b20200502a):
+    * Peaks for pressure and wind speed now kept track of separately
+        > Fixes issue with storms sometimes given the wrong classification name in the info panel
+v0.2.11 (b20200424a):
+    + Added new lists to North Indian Ocean designations preset
+v0.2.10 (b20200324a):
+    + Added web worker test
+    * Loading ring can now display descriptions for more than one task
+v0.2.9 (b20200229a):
+    * Fixed bug where only loaded seasons, but not new seasons, unload when no longer needed
+v0.2.8 (b20200219a):
+    + Added South Atlantic and Mediterranean map types
+v0.2.7 (b20200217a):
+    * Old name list presets converted to designation-system presets
+v0.2.6 (b20200215a):
+    * Redone storm icon arms to make them nicer and flush with the icon body
+    * Scales can now specify any number of storm icon arms (besides 0 or 2) for a category
+v0.2.5 (b20200214a):
+    + Added India Meteorological Dept. and Southwest Indian Ocean scales
+v0.2.4 (b20200212a):
+    * Background color made much darker and land colors tweaked
+    * Land colors are now smoothed with the height map
+        > Can be disabled in the settings menu
+    * Fixed snow rendering incorrectly
+    * Fixed moisture map layer coast outline rendering incorrectly
+v0.2.3 (b20200211a):
+    + Added Jakarta and Port Moresby sub-basins and naming to Australian region map mode
+v0.2.2 (b20200209a):
+    + Added support for scales with other measurements such as pressure in inHg, 10-minute wind speed, and mph and km/h wind
+    + Added Australian and Typhoon scales
+    * Fixed 2020-21 South-West Indian Ocean name list preset
+v0.2.1 (b20200208a):
+    * Some minor tweaks and code de-cluttering
+v0.2 (b20200206a):
+    + Added scale system
+        > replaces old hardcoded Saffir-Simpson scale with something more flexible and customizable
+        > sub-basin-specific and saved/loaded with basin
+        > allows for different color schemes and "flavors" of nomenclature
+    + Added "Wiki" color scheme
+        > uses Wikipedia category colors for storm icons/tracks/timeline bars
+        > C6+ colors in Extended Saffir-Simpson scale sourced from Hypothetical Hurricanes Wiki
+        > can be accessed with the "Scale Color Scheme" option in New Basin Settings
+    * "Hypothetical Categories" option replaced with Extended Saffir-Simpson scale
+    * "Hurricane-Strength Term" option replaced with "Scale Flavor" option
+v0.1.2 (b20200203a):
+    + Added ARB and BOB sub-basins to the North Indian Ocean map mode with numbering included
+    * Corrected the boundaries of the NIO basin (including in Western Pacific map mode)
+v0.1.1.1 (b20200202c):
+    * Fixed bug where storms that go off the edge of the map as an in-basin TC remain "currently active" and glitch the timeline after the season ends
+v0.1.1 (b20200202b):
+    * Season timelines now pack better and take the width of the label into account
+    * Timeline bars can now be clicked to bring up that storm's info in the side panel
+        > Individual storm timelines not yet added
+    * The "Jump to" button for TCs now jumps to when the storm entered the basin or formed rather than when it initially spawned as a disturbance
+v0.1 (b20200202a):
+    + Added CPac and PAGASA designation-systems for newly-created EPac and WPac map type basins respectively
+    * Sub-basins and designation-systems now fully implemented for storm statistics and naming
+        > No UI yet to see statistics for sub-basins other than the main basin, but the stats are saved
+    * Tracks now include out-basin portions for in-basin storms
+    * Side-panel "Dates active" info for storms now notes if a storm has entered or left the basin
+    * First version with traditional version numbering
+    * Updated PAGASA name list preset with replacements for the 2019 typhoon season
+v20200124a:
+    * Season stats now saved by sub-basin
+        > Another step towards full sub-basin implementation
+        > Includes sub-basin-specific counters for designations (numbers and annual names)
+v20200122a:
+    * Updated PAGASA name list preset with replacements for the 2017 and 2018 typhoon seasons
+    * Fixed a single storm being named "Unnamed" after names are exhausted for certain preset naming lists
+v20200119a:
+    * Partial implementation of SubBasin and DesignationSystem classes
+    * Old name list system replaced with DesignationSystem objects to allow more flexible numbering and naming
+        > Still WIP and doesn't yet have all the intended flexibility
+    * Basins now given a main SubBasin for the implementation of DesignationSystem
+        > Other sub-basins such as PAGASA are still planned for a future update
+    * Storms are no longer named "Unnamed" when names are exhausted, but just continue using their number
+v20200101a:
+    * Slight code changes to set up upcoming scale system
+v20191231a:
+    * Updated South-West Indian Ocean names for the 2021-22 list
+    * Some other under-the-hood changes
+v20191109a:
+    * Fixed season summary track mode including:
+        > storms from previous years whose remnants lasted into the relevant year
+        > storms from following years whose precursors formed during the relevant year
+    * Fixed timelines not updating after the end of the year without having to view a different season's timeline first
+    * Fixed out-basin storms being included in damage, deaths, and landfall stats
 v20191004a:
     + Added "designations" system for more flexible and robust storm numbering and naming
         > Includes support for secondary (PAGASA-style) names (though currently not implemented)
