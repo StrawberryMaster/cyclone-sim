@@ -649,6 +649,14 @@ class Season{
         return n;
     }
 
+    get_season_year(){
+        // bad hacky way at getting the season year
+        for(let y in this.basin.seasons){
+            if(this.basin.seasons[y] === this)
+                return +y;
+        }
+    }
+
     save(forceStormRefs){
         let basin = this.basin;
         let val = {};
@@ -717,7 +725,8 @@ class Season{
                     ]) oldStats[p] = obj[p];
                 }
                 if(obj.stats){
-                    for(let sub in obj.stats) this.subBasinStats[sub] = new SeasonStats(basin,sub,data.sub(obj.stats[sub]));
+                    for(let sub in obj.stats)
+                        this.subBasinStats[sub] = new SeasonStats(basin,sub,data.sub(obj.stats[sub]));
                 }
                 if(data.format>ENVDATA_COMPATIBLE_FORMAT && obj.envData){
                     for(let f of basin.env.fieldList){
@@ -835,6 +844,8 @@ class Season{
                 dCounters.number = oldStats.depressions || 0;
                 dCounters.name = oldStats.namedStorms || 0;
             }
+            for(let s in this.subBasinStats)
+                this.subBasinStats[s].update_most_intense(this);
             if(data.format===SAVE_FORMAT) this.modified = false;
             else{
                 db.transaction('rw',db.seasons,()=>{
@@ -879,11 +890,48 @@ class SeasonStats{
         this.designationCounters.number = 0;    // counter for numerical designations
         this.designationCounters.name = 0;      // counter for annual-based name designations
 
+        this.most_intense = undefined;
+
         if(data instanceof LoadData) this.load(data);
     }
 
     addACE(v){
         this.ACE = round((this.ACE + v) * ACE_DIVISOR) / ACE_DIVISOR;
+    }
+
+    update_most_intense(season, storm, data){
+        if(this.most_intense === undefined){
+            let lowest_pressure;
+            let record_holder;
+            let year = season.get_season_year();
+            for(let s of season.forSystems()){
+                if(s.inBasinTC){
+                    for(let i = 0; i < s.record.length; i++){
+                        let d = s.record[i];
+                        let in_subbasin = false;
+                        let in_year = this.basin.getSeason(s.get_tick_from_record_index(i)) === year;
+                        for(let sbid of this.basin.forSubBasinChain(land.getSubBasin(d.pos.x, d.pos.y))){
+                            if(sbid === +this.subBasinId)
+                                in_subbasin = true;
+                        }
+                        if(in_subbasin && in_year && tropOrSub(d.type) && (lowest_pressure === undefined || d.pressure < lowest_pressure)){
+                            lowest_pressure = d.pressure;
+                            record_holder = s;
+                        }
+                    }
+                }
+            }
+            if(record_holder)
+                this.most_intense = new StormRef(this.basin, record_holder);
+        }
+        if(storm && data){
+            if(this.most_intense instanceof StormRef){
+                let most_intense_storm = this.most_intense.fetch();
+                if(data.pressure < most_intense_storm.peak.pressure)
+                    this.most_intense = new StormRef(this.basin, storm);
+            }else
+                this.most_intense = new StormRef(this.basin, storm);
+        }
     }
 
     save(){
@@ -897,6 +945,8 @@ class SeasonStats{
             ]) d[p] = this[p];
             d.cCounters = {};
             for(let i in this.classificationCounters) d.cCounters[i] = this.classificationCounters[i];
+            if(this.most_intense)
+                d.most_intense = this.most_intense.save();
         }
         d.dCounters = {};
         d.dCounters.number = this.designationCounters.number;
@@ -923,6 +973,8 @@ class SeasonStats{
                         }
                     }
                 }
+                if(d.most_intense)
+                    this.most_intense = new StormRef(this.basin, data.sub(d.most_intense));
             }
             if(d.dCounters){
                 this.designationCounters.number = d.dCounters.number;

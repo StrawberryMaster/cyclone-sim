@@ -36,6 +36,13 @@ class Storm{
         return this.basin.getSeason(this.birthTime);
     }
 
+    statisticalSeason(){
+        if(this.inBasinTC)
+            return this.basin.getSeason(this.enterTime);
+        else
+            return this.originSeason();
+    }
+
     aliveAt(t){
         return t >= this.birthTime && (!!this.current || t < this.deathTime);
     }
@@ -47,6 +54,10 @@ class Storm{
             return this.record.length>0 ? this.record[this.record.length-1] : null;
         }
         return this.record[floor(t/ADVISORY_TICKS)-ceil(this.birthTime/ADVISORY_TICKS)];
+    }
+
+    get_tick_from_record_index(i){
+        return (ceil(this.birthTime / ADVISORY_TICKS) + i) * ADVISORY_TICKS;
     }
 
     getNameByTick(t){
@@ -342,7 +353,7 @@ class Storm{
         for(let subId of basin.forSubBasinChain(sub)){
             let sb = basin.subBasins[subId];
             let classification = basin.getScale(subId).get(data);
-            // update classification counters for sub-basin
+            // update classification counters and most intense storm for sub-basin
             if(basin.subInBasin(subId)){
                 let stats = cSeason.stats(subId);
                 let cCounters = stats.classificationCounters;
@@ -350,6 +361,7 @@ class Storm{
                     for(let i=0;i<=classification;i++){
                         if(!this.subBasinData(subId,year,i,true)) cCounters[i]++;
                     }
+                    stats.update_most_intense(cSeason, this, data);
                 }
                 stats.addACE(newACE);
             }
