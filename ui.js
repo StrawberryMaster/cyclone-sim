@@ -316,7 +316,7 @@ UI.init = function(){
                 else renderToDo = land.drawSnow();
             }
             if(simSettings.useShadows){
-                if(land.shaderDrawn) drawBuffer(landShader);
+                if(land.shaderDrawn) drawBuffer(landShadows);
                 else renderToDo = land.drawShader();
             }
             if(basin.env.displaying>=0 && !basin.env.layerIsOceanic){
@@ -699,7 +699,7 @@ UI.init = function(){
             loadable = false;
         }else{
             label = b.saveName;
-            if(b.format<EARLIEST_COMPATIBLE_FORMAT){
+            if(b.format < EARLIEST_COMPATIBLE_FORMAT || b.format > SAVE_FORMAT){
                 label += " [Incompatible]";
                 loadable = false;
             }else loadable = true;
@@ -715,7 +715,7 @@ UI.init = function(){
 
     let loadbuttonclick = function(){
         let b = loadMenu.loadables[loadMenu.page*LOAD_MENU_BUTTONS_PER_PAGE+this.buttonNum];
-        if(b && b.format>=EARLIEST_COMPATIBLE_FORMAT){
+        if(b && b.format >= EARLIEST_COMPATIBLE_FORMAT && b.format <= SAVE_FORMAT){
             let basin = new Basin(b.saveName);
             basin.initialized.then(()=>{
                 basin.mount();
@@ -820,7 +820,7 @@ UI.init = function(){
     },function(){
         simSettings.setSmoothLandColor("toggle");
         if(land){
-            landBuffer.clear();
+            // landBuffer.clear();
             land.drawn = false;
         }
     });
@@ -873,15 +873,13 @@ UI.init = function(){
 
     // designation system editor
 
-    let refresh_desig_editor;
-
-    const define_desig_editor = ()=>{
+    const desig_editor_definition = (()=>{
         const section_spacing = 36;
         const section_heights = 28;
         const section_width = 400;
         const name_sections = 6;
 
-        let editing_sub_basin = DEFAULT_MAIN_SUBBASIN;
+        let editing_sub_basin;
         let desig_system;
         let name_list_num = 0;
         let name_list_page = 0;
@@ -897,8 +895,8 @@ UI.init = function(){
 
         const refresh_num_section = ()=>{
             if(desig_system instanceof DesignationSystem){
-                prefix_box.value = desig_system.numbering.prefix;
-                suffix_box.value = desig_system.numbering.suffix;
+                prefix_box.value = desig_system.numbering.prefix || '';
+                suffix_box.value = desig_system.numbering.suffix || '';
             }
             if(desig_system && desig_system.numbering.enabled)
                 num_affix_section.show();
@@ -908,7 +906,9 @@ UI.init = function(){
         const refresh_name_section = ()=>{
             name_list_page = 0;
         };
-        refresh_desig_editor = ()=>{
+        const refresh_desig_editor = ()=>{
+            if(editing_sub_basin === undefined)
+                editing_sub_basin = UI.viewBasin.mainSubBasin;
             let sb = UI.viewBasin.subBasins[editing_sub_basin];
             if(sb && sb.designationSystem)
                 desig_system = sb.designationSystem;
@@ -984,7 +984,7 @@ UI.init = function(){
                 editing_sub_basin++;
                 if(editing_sub_basin > 255)
                     editing_sub_basin = 0;
-            }while(!(UI.viewBasin.subBasins[editing_sub_basin] instanceof SubBasin));
+            }while(!(UI.viewBasin.subBasins[editing_sub_basin] instanceof SubBasin && UI.viewBasin.subBasins[editing_sub_basin].designationSystem));
             refresh_desig_editor();
         }).append(false,0,18,30,10,s=>{ // prev sub-basin button
             s.button('',true);
@@ -994,7 +994,7 @@ UI.init = function(){
                 editing_sub_basin--;
                 if(editing_sub_basin < 0)
                     editing_sub_basin = 255;
-            }while(!(UI.viewBasin.subBasins[editing_sub_basin] instanceof SubBasin));
+            }while(!(UI.viewBasin.subBasins[editing_sub_basin] instanceof SubBasin && UI.viewBasin.subBasins[editing_sub_basin].designationSystem));
             refresh_desig_editor();
         });
 
@@ -1208,7 +1208,7 @@ UI.init = function(){
         },function(){
             prefix_box.enterFunc();
             suffix_box.enterFunc();
-            editing_sub_basin = DEFAULT_MAIN_SUBBASIN;
+            editing_sub_basin = UI.viewBasin.mainSubBasin;
             list_lists_mode = true;
             aux_list = false;
             name_list_num = 0;
@@ -1254,9 +1254,9 @@ UI.init = function(){
         },()=>{
             name_editor.hide();
         });
-    };
 
-    define_desig_editor();
+        return {refresh: refresh_desig_editor};
+    })();
 
     // primary "in sim" scene
 
@@ -1457,7 +1457,7 @@ UI.init = function(){
                 x = getMouseX();
                 y = getMouseY();
             }
-            if(x >= WIDTH || x < 0 || y >= HEIGHT || y < 0 || (basin.env.fields[f].oceanic && land.get(x,y))){
+            if(x >= WIDTH || x < 0 || y >= HEIGHT || y < 0 || (basin.env.fields[f].oceanic && land.get(Coordinate.convertFromXY(basin.mapType, x, y)))){
                 txtStr += "N/A";
             }else{
                 let v = basin.env.get(f,x,y,viewTick);
@@ -1596,9 +1596,9 @@ UI.init = function(){
             textSize(15);
             let se = UI.viewBasin.fetchSeason(S);
             if(se instanceof Season){
-                let stats = se.stats(DEFAULT_MAIN_SUBBASIN);
+                let stats = se.stats(UI.viewBasin.mainSubBasin);
                 let counters = stats.classificationCounters;
-                let scale = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN);
+                let scale = UI.viewBasin.getScale(UI.viewBasin.mainSubBasin);
                 for(let {statName, cNumber} of scale.statDisplay())
                     info_row(statName, counters[cNumber]);
                 info_row('Total ACE', stats.ACE);
@@ -1785,8 +1785,8 @@ UI.init = function(){
                         for(let q=0;q<t.record.length;q++){
                             let rt = ceil(t.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS + q*ADVISORY_TICKS;
                             let d = t.record[q];
-                            if(tropOrSub(d.type)&&land.inBasin(d.pos.x,d.pos.y)){
-                                let clsn = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).get(d);
+                            if(tropOrSub(d.type)&&land.inBasin(d.coord())){
+                                let clsn = UI.viewBasin.getScale(UI.viewBasin.mainSubBasin).get(d);
                                 if(!aSegment){
                                     aSegment = {};
                                     part.segments.push(aSegment);
@@ -1875,7 +1875,7 @@ UI.init = function(){
                             max_wind = w;
                     }
                 }
-                let scale = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN);
+                let scale = UI.viewBasin.getScale(UI.viewBasin.mainSubBasin);
                 if(scale.measure === SCALE_MEASURE_ONE_MIN_KNOTS || scale.measure === SCALE_MEASURE_TEN_MIN_KNOTS){
                     let color = scale.getColor(0);
                     let y0 = bBound;
@@ -1962,7 +1962,7 @@ UI.init = function(){
                     else noStroke();
                     for(let j=0;j<p.segments.length;j++){
                         let S = p.segments[j];
-                        fill(UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).getColor(S.maxCat,!S.fullyTrop));
+                        fill(UI.viewBasin.getScale(UI.viewBasin.mainSubBasin).getColor(S.maxCat,!S.fullyTrop));
                         rect(lBound+S.startX,y,max(S.endX-S.startX,1),10);
                     }
                     let labelLeftBound = lBound + p.segments[p.segments.length-1].endX;
@@ -2076,7 +2076,7 @@ UI.init = function(){
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Designation system editor menu button
         s.button("Edit Designations",false,15);
     },function(){
-        refresh_desig_editor();
+        desig_editor_definition.refresh();
         primaryWrapper.hide();
         desigSystemEditor.show();
         paused = true;
