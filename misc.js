@@ -1,28 +1,14 @@
 function refreshTracks(force) {
     if (simSettings.trackMode === 2 && !force) return;
-
     tracks.clear();
     forecastTracks.clear();
-
-    let target;
-    let valid;
-    let systems;
-
-    if (selectedStorm) {
-        systems = [selectedStorm.fetchStorm()];
-    } else if (simSettings.trackMode === 2) {
-        target = UI.viewBasin.getSeason(viewTick);
-        valid = sys => (sys.inBasinTC && (UI.viewBasin.getSeason(sys.enterTime) === target || UI.viewBasin.getSeason(sys.enterTime) < target && (sys.exitTime === undefined || UI.viewBasin.getSeason(sys.exitTime - 1) >= target)));
-        systems = UI.viewBasin.fetchSeason(viewTick, true, true).forSystems().filter(valid);
-    } else if (UI.viewBasin.viewingPresent()) {
-        systems = UI.viewBasin.activeSystems.map(s => s.fetchStorm());
-    } else {
-        systems = UI.viewBasin.fetchSeason(viewTick, true, true).forSystems();
-    }
-
-    for (let s of systems) {
-        s.renderTrack();
-    }
+    if (selectedStorm) selectedStorm.renderTrack();
+    else if (simSettings.trackMode === 2) {
+        let target = UI.viewBasin.getSeason(viewTick);
+        let valid = sys => (sys.inBasinTC && (UI.viewBasin.getSeason(sys.enterTime) === target || UI.viewBasin.getSeason(sys.enterTime) < target && (sys.exitTime === undefined || UI.viewBasin.getSeason(sys.exitTime - 1) >= target)));
+        for (let s of UI.viewBasin.fetchSeason(viewTick, true, true).forSystems()) if (valid(s)) s.renderTrack();
+    } else if (UI.viewBasin.viewingPresent()) for (let s of UI.viewBasin.activeSystems) s.fetchStorm().renderTrack();
+    else for (let s of UI.viewBasin.fetchSeason(viewTick, true, true).forSystems()) s.renderTrack();
 }
 
 function createBuffer(w = WIDTH, h = HEIGHT, alwaysFull = false, noScale = false) {
