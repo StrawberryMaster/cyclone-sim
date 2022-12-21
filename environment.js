@@ -690,18 +690,20 @@ class Land {
 
         // cache colors for 256 possible land height values to avoid expensive calculations in pixel loop
         const C = COLORS.land;
-        const colorCache = [];
+        const colorCache = new Array(256);
         for (let i = 255, ci = 0; i >= 0; i--) {
             let l;
-            if (this.earth)
-                l = map(sqrt(map(i, 12, 150, 0, 1, true)), 0, 1, 0.501, 1);
-            else
+            if (this.earth) {
+                l = map(Math.sqrt(map(i, 12, 150, 0, 1, true)), 0, 1, 0.501, 1);
+            } else {
                 l = Math.max(i / 255, 0.501);
-            if (C[ci] && l <= C[ci][0])
+            }
+            if (C[ci] && l <= C[ci][0]) {
                 ci++;
-            if (ci >= C.length)
+            }
+            if (ci >= C.length) {
                 colorCache[i] = { r: 0, g: 0, b: 0 };
-            else {
+            } else {
                 let color = C[ci][1];
                 if (simSettings.smoothLandColor && ci > 0) {
                     const color1 = C[ci - 1][1];
@@ -736,8 +738,9 @@ class Land {
                         coastPx[index + 1] = 0;
                         coastPx[index + 2] = 0;
                         coastPx[index + 3] = 255;
-                    } else
+                    } else {
                         coastPx[index + 3] = 0;
+                    }
                     outBasinPx[index + 3] = 0;
                 } else {
                     landBuffer.pixels[index + 3] = 0;
@@ -768,17 +771,18 @@ class Land {
     }
 
     *drawSnow() {
-        yield "Rendering " + (random() < 0.02 ? "sneaux" : "snow") + "...";
+        yield "Rendering " + (Math.random() < 0.02 ? "sneaux" : "snow") + "...";
         const { fullW: W, fullH: H } = fullDimensions();
         const src = this.map.pixels; // source image for land data; red channel is elevation; green channel is land/water; blue channel is sub-basin id
 
-        const eleCache = []; // cache elevation values to avoid expensive function calls in pixel loop
+        const eleCache = new Array(256); // cache elevation values to avoid expensive function calls in pixel loop
         for (let i = 255; i >= 0; i--) {
             let l;
-            if (this.earth)
-                l = map(sqrt(map(i, 12, 150, 0, 1, true)), 0, 1, 0.501, 1);
-            else
+            if (this.earth) {
+                l = map(Math.sqrt(map(i, 12, 150, 0, 1, true)), 0, 1, 0.501, 1);
+            } else {
                 l = Math.max(i / 255, 0.501);
+            }
             eleCache[i] = l;
         }
         const snowColor = { r: red(COLORS.snow), g: green(COLORS.snow), b: blue(COLORS.snow) };
@@ -791,8 +795,7 @@ class Land {
                 let index = 4 * (j * W + i);
                 if (src[index + 1]) { // if pixel is on land
                     let l = 1 - j / H;
-                    if (SHem)
-                        l = 1 - l;
+                    if (SHem) l = 1 - l;
                     let h = 0.95 - eleCache[src[index]];
                     let p = l > 0 ? Math.ceil((snowLayers / 0.3) * (h / l - 0.15)) : h < 0 ? 0 : snowLayers;
                     for (let k = 0; k < snowLayers; k++) {
@@ -801,8 +804,9 @@ class Land {
                             snow[k].pixels[index + 1] = snowColor.g;
                             snow[k].pixels[index + 2] = snowColor.b;
                             snow[k].pixels[index + 3] = 255;
-                        } else
+                        } else {
                             snow[k].pixels[index + 3] = 0;
+                        }
                     }
                 } else {
                     for (let k = 0; k < snowLayers; k++) {

@@ -1,13 +1,13 @@
 class UI {
     constructor(parent, x, y, w, h, renderer, onclick, showing) {
-        if (parent instanceof UI) {
-            this.parent = parent;
-            this.parent.children.push(this);
-        }
+        this.parent = parent instanceof UI ? parent : undefined;
         this.relX = x;
         this.relY = y;
         this.width = w;
         this.height = h;
+        this.children = [];
+        this.showing = showing === undefined ? true : showing;
+        if (parent instanceof UI) parent.children.push(this);
         if (renderer instanceof Function) this.renderFunc = renderer;
         if (renderer instanceof Array) {
             let size = renderer[0];
@@ -32,8 +32,6 @@ class UI {
             this.clickFunc = onclick;
             this.isInput = false;
         }
-        this.children = [];
-        this.showing = showing === undefined ? true : showing;
         if (!this.parent) UI.elements.push(this);
     }
 

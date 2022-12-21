@@ -1,44 +1,52 @@
 function refreshTracks(force) {
     if (simSettings.trackMode === 2 && !force) return;
+
     tracks.clear();
     forecastTracks.clear();
-    if (selectedStorm) selectedStorm.renderTrack();
-    else if (simSettings.trackMode === 2) {
-        let target = UI.viewBasin.getSeason(viewTick);
-        let valid = sys => (sys.inBasinTC && (UI.viewBasin.getSeason(sys.enterTime) === target || UI.viewBasin.getSeason(sys.enterTime) < target && (sys.exitTime === undefined || UI.viewBasin.getSeason(sys.exitTime - 1) >= target)));
-        for (let s of UI.viewBasin.fetchSeason(viewTick, true, true).forSystems()) if (valid(s)) s.renderTrack();
-    } else if (UI.viewBasin.viewingPresent()) for (let s of UI.viewBasin.activeSystems) s.fetchStorm().renderTrack();
-    else for (let s of UI.viewBasin.fetchSeason(viewTick, true, true).forSystems()) s.renderTrack();
+
+    let target;
+    let valid;
+    let systems;
+
+    if (selectedStorm) {
+        systems = [selectedStorm.fetchStorm()];
+    } else if (simSettings.trackMode === 2) {
+        target = UI.viewBasin.getSeason(viewTick);
+        valid = sys => (sys.inBasinTC && (UI.viewBasin.getSeason(sys.enterTime) === target || UI.viewBasin.getSeason(sys.enterTime) < target && (sys.exitTime === undefined || UI.viewBasin.getSeason(sys.exitTime - 1) >= target)));
+        systems = UI.viewBasin.fetchSeason(viewTick, true, true).forSystems().filter(valid);
+    } else if (UI.viewBasin.viewingPresent()) {
+        systems = UI.viewBasin.activeSystems.map(s => s.fetchStorm());
+    } else {
+        systems = UI.viewBasin.fetchSeason(viewTick, true, true).forSystems();
+    }
+
+    for (let s of systems) {
+        s.renderTrack();
+    }
 }
 
-function createBuffer(w, h, alwaysFull, noScale) {
-    w = w || WIDTH;
-    h = h || HEIGHT;
+function createBuffer(w = WIDTH, h = HEIGHT, alwaysFull = false, noScale = false) {
     let b = createGraphics(w, h);
-    let metadata = {
-        baseWidth: w,
-        baseHeight: h,
-        alwaysFull,
-        noScale
-    };
+    let metadata = { w, h, alwaysFull, noScale };
     buffers.set(b, metadata);
     return b;
 }
 
 function rescaleCanvases(s) {
-    for (let [buffer, metadata] of buffers) {
+    buffers.forEach(([buffer, metadata]) => {
         if (!metadata.alwaysFull) {
-            buffer.resizeCanvas(floor(metadata.baseWidth * s), floor(metadata.baseHeight * s));
+            buffer.resizeCanvas(Math.floor(metadata.baseWidth * s), Math.floor(metadata.baseHeight * s));
             if (!metadata.noScale) buffer.scale(s);
         }
-    }
-    resizeCanvas(floor(WIDTH * s), floor(HEIGHT * s));
+    });
+    resizeCanvas(Math.floor(WIDTH * s), Math.floor(HEIGHT * s));
 }
 
 function toggleFullscreen() {
-    if (document.fullscreenElement === canvas || deviceOrientation === PORTRAIT) document.exitFullscreen();
-    else {
-        canvas.requestFullscreen().then(function () {
+    if (document.fullscreenElement === canvas || deviceOrientation === PORTRAIT) {
+        document.exitFullscreen();
+    } else {
+        canvas.requestFullscreen().then(() => {
             scaler = displayWidth / WIDTH;
             rescaleCanvases(scaler);
             if (UI.viewBasin) {
@@ -60,36 +68,35 @@ function drawBuffer(b) {
 }
 
 function getMouseX() {
-    return floor(mouseX / scaler);
+    return Math.floor(mouseX / scaler);
 }
 
 function getMouseY() {
-    return floor(mouseY / scaler);
+    return Math.floor(mouseY / scaler);
 }
 
 function coordinateInCanvas(x, y, isPixelCoordinate) {
-    if (isPixelCoordinate) return x >= 0 && x < width && y >= 0 && y < height;
-    return x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT;
+    const maxX = isPixelCoordinate ? width : WIDTH;
+    const maxY = isPixelCoordinate ? height : HEIGHT;
+    return x >= 0 && x < maxX && y >= 0 && y < maxY;
 }
 
-function cbrt(n) {   // Cubed root function since p5 doesn't have one nor does pow(n,1/3) work for negative numbers
-    return n < 0 ? -pow(abs(n), 1 / 3) : pow(n, 1 / 3);
+function cbrt(n) {  // Cubed root function since p5 doesn't have one nor does pow(n,1/3) work for negative numbers
+    return n < 0 ? -Math.pow(Math.abs(n), 1 / 3) : Math.pow(n, 1 / 3);
 }
 
 function zeroPad(n, d) {
     n = parseFloat(n);
     if (!Number.isNaN(n)) {
-        let str;
-        let int = parseInt(n);
+        const int = Math.trunc(n);
+        let str = Math.abs(int).toString().padStart(d, '0');
         if (int < 0) {
-            int = int.toString().slice(1);
-            str = '-' + int.padStart(d, '0');
-        } else {
-            int = int.toString();
-            str = int.padStart(d, '0');
+            str = `-${str}`;
         }
-        str = str.slice(0, -int.length);
-        str += abs(n).toString();
+        const fraction = Math.abs(n) - Math.abs(int);
+        if (fraction > 0) {
+            str += fraction.toString().slice(1);
+        }
         return str;
     }
 }
@@ -98,29 +105,28 @@ function hashCode(str) {
     let hash = 0;
     if (str.length === 0) return hash;
     for (let i = 0; i < str.length; i++) {
-        let char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash &= hash; // Convert to 32bit integer
     }
     return hash;
 }
 
 function loadImg(path) {     // wrap p5.loadImage in a promise
     return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            loadImage(path, resolve, reject);
-        });
+        loadImage(path, resolve, reject);
     });
 }
 
 // waitForAsyncProcess allows the simulator to wait for things to load; unneeded for saving
 function waitForAsyncProcess(func, desc, ...args) {  // add .then() callbacks inside of func before returning the promise, but add .catch() to the returned promise of waitForAsyncProcess
     waitingFor++;
-    if (waitingFor < 2)
-        waitingTCSymbolSHem = random() < 0.5;
+    if (waitingFor < 2) {
+        waitingTCSymbolSHem = Math.random() < 0.5;
+    }
     let descIndex = waitingDescs.lowestAvailable;
-    if (descIndex > waitingDescs.maxIndex)
+    if (descIndex > waitingDescs.maxIndex) {
         waitingDescs.maxIndex = descIndex;
+    }
     for (let i = descIndex + 1; i <= waitingDescs.maxIndex + 1; i++) {
         if (!waitingDescs[i]) {
             waitingDescs.lowestAvailable = i;

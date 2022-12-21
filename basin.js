@@ -1129,32 +1129,25 @@ class SeasonStats {
 }
 
 class SubBasin {
-    constructor(basin, id, data, dName, parent, scale, desSys) {
+    constructor(basin, id = DEFAULT_MAIN_SUBBASIN, data, dName, parent, scale, desSys) {
         this.basin = basin instanceof Basin && basin;
-        this.id = id || DEFAULT_MAIN_SUBBASIN;
-        this.parent = undefined;
-        if (parent) this.parent = parent;
-        else if (this.id !== DEFAULT_MAIN_SUBBASIN && this.id !== DEFAULT_OUTBASIN_SUBBASIN && parent !== false) this.parent = DEFAULT_MAIN_SUBBASIN;
-        this.displayName = undefined;
-        if (dName) this.displayName = dName;
-        this.designationSystem = undefined;
-        this.scale = undefined;
+        this.id = id;
+        this.parent = parent !== false ? parent || DEFAULT_MAIN_SUBBASIN : undefined;
+        this.displayName = dName;
         this.setDesignationSystem(desSys);
-        if (scale instanceof Scale) this.scale = scale;
-        this.mapOutline = undefined;
-        if (!this.outBasin() && this.id !== DEFAULT_MAIN_SUBBASIN) {
-            let { fullW, fullH } = fullDimensions();
-            this.mapOutline = createBuffer(fullW, fullH, true);
-            this.mapOutline.noStroke();
-        }
-        if (data instanceof LoadData) this.load(data);
+        this.scale = scale instanceof Scale ? scale : undefined;
+        this.mapOutline = !this.outBasin() && this.id !== DEFAULT_MAIN_SUBBASIN
+            ? (() => {
+                let { fullW, fullH } = fullDimensions();
+                let mapOutline = createBuffer(fullW, fullH, true);
+                mapOutline.noStroke();
+                return mapOutline;
+            })() : undefined;
+        data instanceof LoadData && this.load(data);
     }
 
     setDesignationSystem(ds) {
-        if (ds instanceof DesignationSystem) {
-            ds.setSubBasin(this);
-            this.designationSystem = ds;
-        }
+        ds instanceof DesignationSystem && (ds.setSubBasin(this), this.designationSystem = ds);
     }
 
     outBasin(origin) {
@@ -1255,67 +1248,56 @@ class LoadData {
 function decodeB36StringArray(str) {
     const R = SAVING_RADIX;
     let arr = [];
-    let fl = str.slice(0, 1);
-    fl = parseInt(fl, R);
+    let fl = parseInt(str.slice(0, 1), R);
     if (fl > R / 2) fl -= R;
-    for (let i = 1, runLen = 0, run = 0, nLen; i < str.length; i += nLen, run++) {
+    let i = 1, runLen = 0, run = 0, nLen;
+    while (i < str.length) {
         if (run >= runLen) {
-            runLen = str.slice(i, ++i);
-            nLen = str.slice(i, ++i);
-            runLen = parseInt(runLen, R) + 1;
-            nLen = parseInt(nLen, R) + 1;
+            runLen = parseInt(str.slice(i, ++i), R) + 1;
+            nLen = parseInt(str.slice(i, ++i), R) + 1;
             run = 0;
         }
-        let n = str.slice(i, i + nLen);
-        n = parseInt(n, R);
+        let n = parseInt(str.slice(i, i + nLen), R);
         n = n % 2 === 0 ? n / 2 : -(n - 1) / 2;
-        n *= pow(R, fl);
+        n *= Math.pow(R, fl);
         arr.push(n);
+        i += nLen;
+        run++;
     }
     return arr;
 }
 
-function decodePoint(n, o) {
-    if (!o) o = {};
-    let w = floor(o.w || WIDTH);
-    let h = floor(o.h || HEIGHT);
-    let z = floor(n / (w * h));
+
+function decodePoint(n, o = {}) {
+    let w = Math.floor(o.w || WIDTH);
+    let h = Math.floor(o.h || HEIGHT);
+    let z = Math.floor(n / (w * h));
     n %= w * h;
-    let y = floor(n / w);
+    let y = Math.floor(n / w);
     n %= w;
     let x = n;
     if (o.mapX instanceof Function) x = o.mapX(x);
     if (o.mapY instanceof Function) y = o.mapY(y);
     if (o.mapZ instanceof Function) z = o.mapZ(z);
-    if (o.p5Vec) return createVector(x, y, z);
-    return { x, y, z };
+    return o.p5Vec ? createVector(x, y, z) : { x, y, z };
 }
+
 
 function decodePointArray(s, o) {
     let arr = decodeB36StringArray(s);
-    for (let i = 0; i < arr.length; i++) {
-        arr[i] = decodePoint(arr[i], o);
-    }
-    return arr;
+    return arr.map(n => decodePoint(n, o));
 }
 
 // earth sub-basin id converter (for pre-v0.4 saves)
 
 function* updateEarthSubBasinIds(mapType) {
-    if (MAP_TYPES[mapType].form === 'earth') {
+    const form = MAP_TYPES[mapType]?.form;
+    if (form === 'earth') {
         const ids = EARTH_SB_IDS;
         yield [0, MAP_TYPES[mapType].mainSubBasin]; // main (sub-)basin
-        // hardcoded conversion of special sub-basin ids by map type
-        if (mapType === 7) // Eastern Pacific
-            yield [128, ids.cpac];
-        else if (mapType === 8) // Western Pacific
-            yield [128, ids.pagasa];
-        else if (mapType === 9) { // North Indian Ocean
-            yield [128, ids.arb];
-            yield [129, ids.bob];
-        } else if (mapType === 10) { // Australian Region
-            yield [128, ids.jakarta];
-            yield [129, ids.pm];
-        }
+        if (mapType === 7) yield [128, ids.cpac]; // Eastern Pacific
+        else if (mapType === 8) yield [128, ids.pagasa]; // Western Pacific
+        else if (mapType === 9) yield* [[128, ids.arb], [129, ids.bob]]; // North Indian Ocean
+        else if (mapType === 10) yield* [[128, ids.jakarta], [129, ids.pm]]; // Australian Region
     }
 }

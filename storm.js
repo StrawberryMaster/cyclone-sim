@@ -11,9 +11,10 @@ class Storm {
 
         this.rotation = random(TAU);
 
-        this.designations = {};
-        this.designations.primary = [];
-        this.designations.secondary = [];
+        this.designations = {
+            primary: [],
+            secondary: [],
+          };
 
         this.birthTime = this.current ? basin.tick : undefined;     // tick formed as a disturbance/low
         this.formationTime = undefined;                             // tick formed as a TC
@@ -37,10 +38,9 @@ class Storm {
     }
 
     statisticalSeason() {
-        if (this.inBasinTC)
-            return this.basin.getSeason(this.enterTime);
-        else
-            return this.originSeason();
+        return this.inBasinTC
+            ? this.basin.getSeason(this.enterTime)
+            : this.originSeason();
     }
 
     aliveAt(t) {
@@ -51,13 +51,15 @@ class Storm {
         if (!this.aliveAt(t)) return null;
         if (t === this.basin.tick) {
             if (allowCurrent) return this.current;
-            return this.record.length > 0 ? this.record[this.record.length - 1] : null;
+            const lastRecord = this.record[this.record.length - 1];
+            return lastRecord !== undefined ? lastRecord : null;
         }
-        return this.record[floor(t / ADVISORY_TICKS) - ceil(this.birthTime / ADVISORY_TICKS)];
+        const index = Math.floor(t / ADVISORY_TICKS) - Math.ceil(this.birthTime / ADVISORY_TICKS);
+        return this.record[index];
     }
 
     get_tick_from_record_index(i) {
-        return (ceil(this.birthTime / ADVISORY_TICKS) + i) * ADVISORY_TICKS;
+        return (Math.ceil(this.birthTime / ADVISORY_TICKS) + i) * ADVISORY_TICKS;
     }
 
     getNameByTick(t) {
@@ -67,27 +69,25 @@ class Storm {
             let p;
             let s = [];
             let snamed;
-            for (let i = 0; i < D.primary.length; i++) {
-                let d = D.primary[i];
-                if (!(d instanceof Designation)) continue;
+            D.primary.forEach(d => {
+                if (!(d instanceof Designation)) return;
                 let e = d.activeAt(t);
                 if (e) {
                     if (!p) p = d;
                     else if (!p.isName() && d.isName()) p = d;
                     else if (e > p.activeAt(t) && (!p.isName() || d.isName())) p = d;
                 }
-            }
-            for (let i = 0; i < D.secondary.length; i++) {
-                let d = D.secondary[i];
-                if (!(d instanceof Designation)) continue;
+            });
+            D.secondary.forEach(d => {
+                if (!(d instanceof Designation)) return;
                 if (d.activeAt(t)) {
-                    if (d.isName() && !snamed) {
-                        s = [];
-                        snamed = true;
-                    }
-                    if (d.isName() || !snamed) s.push(d);
+                  if (d.isName() && !snamed) {
+                    s = [];
+                    snamed = true;
+                  }
+                  if (d.isName() || !snamed) s.push(d);
                 }
-            }
+              });
             s.sort((a, b) => a.effectiveTicks[0] - b.effectiveTicks[0]);
             let ii;
             for (let i = s.length - 1; i >= 0; i--) {

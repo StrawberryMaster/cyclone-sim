@@ -1,4 +1,4 @@
-var paused,
+let paused,
     land,
     // landWorker,
     newBasinSettings,
@@ -210,7 +210,7 @@ class Settings {
         const defaults = Settings.defaults();
         waitForAsyncProcess(() => {
             return db.settings.get(DB_KEY_SETTINGS);
-        }, 'Retrieving Settings...').catch(err => {
+        }, 'Retrieving settings...').catch(err => {
             console.error(err);
         }).then(result => {
             let v = result;
@@ -226,19 +226,15 @@ class Settings {
                     });
                 } else v = [];
             }
-            for (let i = order.length - 1; i >= 0; i--) {
-                if (v.length > 0) this[order[i]] = v.pop();
-                else this[order[i]] = defaults[i];
-            }
-            let sf = (k) => {
-                return (v, v2) => {
-                    this.set(k, v, v2);
-                };
+            order.forEach((key, i) => {
+                this[key] = v.length > 0 ? v.pop() : defaults[i];
+            });
+            let sf = k => (v, v2) => {
+                this.set(k, v, v2);
             };
-            for (let i = 0; i < order.length; i++) {
-                let n = "set" + order[i].charAt(0).toUpperCase() + order[i].slice(1);
-                this[n] = sf(order[i]);
-            }
+            order.forEach(key => {
+                this[`set${key.charAt(0).toUpperCase()}${key.slice(1)}`] = sf(key);
+            });
         });
     }
 
@@ -252,21 +248,20 @@ class Settings {
 
     save() {
         const order = Settings.order();
-        let v = [];
-        for (let i = 0; i < order.length; i++) {
-            v.push(this[order[i]]);
-        }
+        let v = Object.keys(this).filter(key => order.has(key)).map(key => this[key]);
         db.settings.put(v, DB_KEY_SETTINGS).catch(err => {
             console.error(err);
         });
     }
 
     set(k, v, v2) {
-        if (v === "toggle") this[k] = !this[k];
-        else if (v === "incmod") {
-            this[k]++;
-            this[k] %= v2;
-        } else this[k] = v;
+        if (v === 'toggle') {
+            this[k] = !this[k];
+        } else if (v === 'incmod') {
+            this[k] = (this[k] + 1) % v2;
+        } else {
+            Object.assign(this, { [k]: v });
+        }
         this.save();
     }
 
