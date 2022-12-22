@@ -323,7 +323,7 @@ ENV_DEFS.defaults.jetstream = {
         let l = map(sqrt(map(s, -1, 1, 0, 1)), 0, 1, antiPeakLat, peakLat);
         let r = map(s, -1, 1, antiPeakRange, peakRange);
         v = map(v, 0, 1, -r, r);
-        return (l + v) * HEIGHT;s
+        return (l + v) * HEIGHT;
     },
     invisible: true,
     noiseChannels: [
