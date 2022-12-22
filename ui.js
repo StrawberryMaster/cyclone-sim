@@ -840,7 +840,7 @@ UI.init = function () {
         noStroke();
         textAlign(CENTER, CENTER);
         textSize(36);
-        text("Are You Sure?", 0, 0);
+        text("Are you sure?", 0, 0);
         if (areYouSure.desc) {
             textSize(24);
             text(areYouSure.desc, 0, 50);
@@ -1512,7 +1512,7 @@ UI.init = function () {
         toggleFullscreen();
     }).append(false, -29, 0, 24, 24, function (s) {  // Help button
         noStroke();
-        s.button("?", false, 22);
+        s.button("?", false, 24);
     }, function () {
         helpBox.toggleShow();
     });
