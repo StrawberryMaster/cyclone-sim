@@ -32,7 +32,7 @@ function toggleFullscreen() {
     if (document.fullscreenElement === canvas || deviceOrientation === PORTRAIT) {
         document.exitFullscreen();
     } else {
-        canvas.requestFullscreen().then(() => {
+        document.documentElement.requestFullscreen().then(() => {
             scaler = displayWidth / WIDTH;
             rescaleCanvases(scaler);
             if (UI.viewBasin) {
@@ -136,29 +136,15 @@ function waitForAsyncProcess(func, desc, ...args) {  // add .then() callbacks in
     };
     let p = func(...args);
     if (p instanceof Promise || p instanceof Dexie.Promise) {
-        return p.then(v => {
-            endWait();
-            return v;
-        }).catch(e => {
-            endWait();
-            throw e;
-        });
+        return p.finally(() => endWait());
     }
     endWait();
     return Promise.resolve(p);
 }
 
-function makeAsyncProcess(func, ...args) {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            try {
-                resolve(func(...args));
-            } catch (err) {
-                reject(err);
-            }
-        });
-    });
-}
+async function makeAsyncProcess(func, ...args) {
+    return await setTimeout(() => func(...args), 0);
+  } 
 
 function upgradeLegacySaves() {
     return waitForAsyncProcess(() => {
@@ -182,7 +168,7 @@ function upgradeLegacySaves() {
             // Transfer localStorage saves to indexedDB
 
             return db.transaction('rw', db.saves, db.seasons, () => {
-                for (let i = 0; i < localStorage.length; i++) {
+                for (let i = localStorage.length - 1; i >= 0; i--) {
                     let k = localStorage.key(i);
                     if (k.startsWith(LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN)) {
                         let s = k.slice((LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN).length);
@@ -227,13 +213,10 @@ function upgradeLegacySaves() {
     });
 }
 
-document.onfullscreenchange = function () {
-    if (document.fullscreenElement === null) {
-        scaler = 1;
-        rescaleCanvases(scaler);
-        if (UI.viewBasin) {
-            refreshTracks(true);
-            UI.viewBasin.env.displayLayer();
-        }
+document.onfullscreenchange = () => {
+    document.fullscreenElement === null ? rescaleCanvases(1) : undefined;
+    if (UI.viewBasin) {
+        refreshTracks(true);
+        UI.viewBasin.env.displayLayer();
     }
 };
