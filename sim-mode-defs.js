@@ -41,23 +41,22 @@ SPAWN_RULES[SIM_MODE_MEGABLOBS] = {};
 SPAWN_RULES[SIM_MODE_EXPERIMENTAL] = {};
 
 // -- Defaults -- //
-const generateX = () => Math.random(0, WIDTH - 1);
 
 SPAWN_RULES.defaults.archetypes = {
     'tw': {
-        x: generateX,
-        y: b => b.hemY(Math.random(HEIGHT * 0.7, HEIGHT * 0.9)),
+        x: () => random(0, WIDTH - 1),
+        y: (b) => b.hemY(random(HEIGHT * 0.7, HEIGHT * 0.9)),
         pressure: [1000, 1020],
         windSpeed: [15, 35],
-        type,
+        type: TROPWAVE,
         organization: [0, 0.3],
         lowerWarmCore: 1,
         upperWarmCore: 1,
         depth: 0
     },
     'ex': {
-        x: generateX,
-        y: (b, x) => b.hemY(b.env.get("jetstream", x, 0, b.tick) + Math.random(-75, 75)),
+        x: () => random(0, WIDTH - 1),
+        y: (b, x) => b.hemY(b.env.get("jetstream", x, 0, b.tick) + random(-75, 75)),
         pressure: [1000, 1020],
         windSpeed: [15, 35],
         type: EXTROP,
@@ -167,10 +166,10 @@ SPAWN_RULES.defaults.archetypes = {
 
 SPAWN_RULES.defaults.doSpawn = function (b) {
     // tropical waves
-    if (Math.random() < 0.015 * Math.pow(((b.tick % 365) / 365 + 1) / 2, 2)) b.spawnArchetype('tw');
+    if (random() < 0.015 * sq((seasonalSine(b.tick) + 1) / 2)) b.spawnArchetype('tw');
 
     // extratropical cyclones
-    if (Math.random() < 0.01 - 0.002 * (b.tick % 365) / 365) b.spawnArchetype('ex');
+    if (random() < 0.01 - 0.002 * seasonalSine(b.tick)) b.spawnArchetype('ex');
 };
 
 // -- Normal Mode -- //
@@ -180,17 +179,17 @@ SPAWN_RULES[SIM_MODE_NORMAL].doSpawn = SPAWN_RULES.defaults.doSpawn;
 // -- Hyper Mode -- //
 
 SPAWN_RULES[SIM_MODE_HYPER].doSpawn = function (b) {
-    if (Math.random() < 0.013 * Math.pow(((b.tick % 365) / 365 + 1) / 2, 2) + 0.002) b.spawnArchetype('tw');
+    if (random() < (0.013 * sq((seasonalSine(b.tick) + 1) / 2) + 0.002)) b.spawnArchetype('tw');
 
-    if (Math.random() < 0.01 - 0.002 * (b.tick % 365) / 365) b.spawnArchetype('ex');
+    if (random() < 0.01 - 0.002 * seasonalSine(b.tick)) b.spawnArchetype('ex');
 };
 
 // -- Wild Mode -- //
 
 SPAWN_RULES[SIM_MODE_WILD].archetypes = {
     'tw': {
-        x: () => generateX,
-        y: b => b.hemY(Math.random(HEIGHT * 0.2, HEIGHT * 0.9)),
+        x: () => random(0, WIDTH - 1),
+        y: (b) => b.hemY(random(HEIGHT * 0.2, HEIGHT * 0.9)),
         pressure: [1000, 1020],
         windSpeed: [15, 35],
         type: TROPWAVE,
@@ -202,24 +201,24 @@ SPAWN_RULES[SIM_MODE_WILD].archetypes = {
 };
 
 SPAWN_RULES[SIM_MODE_WILD].doSpawn = function (b) {
-    if (Math.random() < 0.015) b.spawnArchetype('tw');
-    if (Math.random() < 0.01 - 0.002 * (b.tick % 365) / 365) b.spawnArchetype('ex');
+    if (random() < 0.015) b.spawnArchetype('tw');
+    if (random() < 0.01 - 0.002 * seasonalSine(b.tick)) b.spawnArchetype('ex');
 };
 
 // -- Megablobs Mode -- //
 
 SPAWN_RULES[SIM_MODE_MEGABLOBS].doSpawn = function (b) {
-    if (Math.random() < (0.013 * Math.pow(((b.tick % 365) / 365 + 1) / 2, 2) + 0.002)) b.spawnArchetype('tw');
+    if (random() < (0.013 * sq((seasonalSine(b.tick) + 1) / 2) + 0.002)) b.spawnArchetype('tw');
 
-    if (Math.random() < 0.01 - 0.002 * (b.tick % 365) / 365) b.spawnArchetype('ex');
+    if (random() < 0.01 - 0.002 * seasonalSine(b.tick)) b.spawnArchetype('ex');
 };
 
 // -- Experimental Mode -- //
 
 SPAWN_RULES[SIM_MODE_EXPERIMENTAL].archetypes = {
     'tw': {
-        x: () => generateX,
-        y: (b) => b.hemY(Math.random(HEIGHT * 0.7, HEIGHT * 0.9)),
+        x: () => random(0, WIDTH - 1),
+        y: (b) => b.hemY(random(HEIGHT * 0.7, HEIGHT * 0.9)),
         pressure: [1000, 1020],
         windSpeed: [15, 35],
         type: TROPWAVE,
@@ -230,8 +229,8 @@ SPAWN_RULES[SIM_MODE_EXPERIMENTAL].archetypes = {
         kaboom: 0
     },
     'ex': {
-        x: () => generateX,
-        y: (b, x) => b.hemY(b.env.get("jetstream", x, 0, b.tick) + Math.random(-75, 75)),
+        x: () => random(0, WIDTH - 1),
+        y: (b, x) => b.hemY(b.env.get("jetstream", x, 0, b.tick) + random(-75, 75)),
         pressure: [1000, 1020],
         windSpeed: [15, 35],
         type: EXTROP,
