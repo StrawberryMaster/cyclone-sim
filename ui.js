@@ -1380,21 +1380,21 @@ UI.init = function () {
     }, function () {
         if (!panel_timeline_container.showing) stormInfoPanel.target = selectedStorm || UI.viewBasin.getSeason(viewTick);
         panel_timeline_container.toggleShow();
-    }).append(false,-29,0,24,10,function(s){     // Speed increase
+    }).append(false, -29, 0, 24, 10, function (s) {     // Speed increase
         let grey = simSpeed == MAX_SPEED;
         s.button('', false, undefined, grey);
-        triangle(4,2,12,5,4,8);
-        triangle(12,2,20,5,12,8);
-    },function(){
-        if(simSpeed > MAX_SPEED)
+        triangle(4, 2, 12, 5, 4, 8);
+        triangle(12, 2, 20, 5, 12, 8);
+    }, function () {
+        if (simSpeed > MAX_SPEED)
             simSpeed--;
-    }).append(false,0,14,24,10,function(s){     // Speed decrease
+    }).append(false, 0, 14, 24, 10, function (s) {     // Speed decrease
         let grey = simSpeed == MIN_SPEED;
         s.button('', false, undefined, grey);
-        triangle(20,2,12,5,20,8);
-        triangle(12,2,4,5,12,8);
-    },function(){
-        if(simSpeed < MIN_SPEED)
+        triangle(20, 2, 12, 5, 20, 8);
+        triangle(12, 2, 4, 5, 12, 8);
+    }, function () {
+        if (simSpeed < MIN_SPEED)
             simSpeed++;
     }).append(false, -29, 0, 24, 24, function (s) {  // Pause/resume button
         s.button('');
@@ -2222,20 +2222,6 @@ function keyPressed() {
         case "t":
             simSettings.setTrackMode("incmod", 4);
             refreshTracks(true);
-        break;
-        case "m":
-        simSettings.setShowMagGlass("toggle");
-        if(UI.viewBasin) UI.viewBasin.env.updateMagGlass();
-        break;
-        default:
-        switch(keyCode){
-            case KEY_LEFT_BRACKET:
-            if(simSpeed < MIN_SPEED)
-                simSpeed++;
-            break;
-            case KEY_RIGHT_BRACKET:
-            if(simSpeed > MAX_SPEED)
-                simSpeed--;
             break;
         case "m":
             simSettings.setShowMagGlass("toggle");
@@ -2244,221 +2230,236 @@ function keyPressed() {
         default:
             switch (keyCode) {
                 case KEY_LEFT_BRACKET:
-                    simSpeed++;
-                    if (simSpeed > 5) simSpeed = 5;
+                    if (simSpeed < MIN_SPEED)
+                        simSpeed++;
                     break;
                 case KEY_RIGHT_BRACKET:
-                    simSpeed--;
-                    if (simSpeed < 0) simSpeed = 0;
+                    if (simSpeed > MAX_SPEED)
+                        simSpeed--;
                     break;
-                case KEY_F11:
-                    toggleFullscreen();
+                case "m":
+                    simSettings.setShowMagGlass("toggle");
+                    if (UI.viewBasin) UI.viewBasin.env.updateMagGlass();
                     break;
                 default:
-                    return;
+                    switch (keyCode) {
+                        case KEY_LEFT_BRACKET:
+                            simSpeed++;
+                            if (simSpeed > 5) simSpeed = 5;
+                            break;
+                        case KEY_RIGHT_BRACKET:
+                            simSpeed--;
+                            if (simSpeed < 0) simSpeed = 0;
+                            break;
+                        case KEY_F11:
+                            toggleFullscreen();
+                            break;
+                        default:
+                            return;
+                    }
             }
+            return false;
     }
-    return false;
-}
 
-function changeViewTick(t) {
-    let oldS = UI.viewBasin.getSeason(viewTick);
-    viewTick = t;
-    let newS = UI.viewBasin.getSeason(viewTick);
-    let finish = () => {
-        refreshTracks(oldS !== newS);
-        UI.viewBasin.env.displayLayer();
-    };
-    let requisites = s => {
-        let arr = [];
-        let allFound = true;
-        for (let i = 0; i < s.systems.length; i++) {
-            let r = s.systems[i];
-            if (r instanceof StormRef && (r.lastApplicableAt === undefined || r.lastApplicableAt >= viewTick || simSettings.trackMode === 2)) {
-                arr.push(r.season);
-                allFound = allFound && UI.viewBasin.fetchSeason(r.season);
+    function changeViewTick(t) {
+        let oldS = UI.viewBasin.getSeason(viewTick);
+        viewTick = t;
+        let newS = UI.viewBasin.getSeason(viewTick);
+        let finish = () => {
+            refreshTracks(oldS !== newS);
+            UI.viewBasin.env.displayLayer();
+        };
+        let requisites = s => {
+            let arr = [];
+            let allFound = true;
+            for (let i = 0; i < s.systems.length; i++) {
+                let r = s.systems[i];
+                if (r instanceof StormRef && (r.lastApplicableAt === undefined || r.lastApplicableAt >= viewTick || simSettings.trackMode === 2)) {
+                    arr.push(r.season);
+                    allFound = allFound && UI.viewBasin.fetchSeason(r.season);
+                }
             }
-        }
-        if (allFound) finish();
-        else {
-            for (let i = 0; i < arr.length; i++) {
-                arr[i] = UI.viewBasin.fetchSeason(arr[i], false, false, true);
+            if (allFound) finish();
+            else {
+                for (let i = 0; i < arr.length; i++) {
+                    arr[i] = UI.viewBasin.fetchSeason(arr[i], false, false, true);
+                }
+                Promise.all(arr).then(finish);
             }
-            Promise.all(arr).then(finish);
-        }
-    };
-    if (UI.viewBasin.fetchSeason(viewTick, true)) {
-        requisites(UI.viewBasin.fetchSeason(viewTick, true));
-    } else UI.viewBasin.fetchSeason(viewTick, true, false, s => {
-        requisites(s);
-    });
-}
+        };
+        if (UI.viewBasin.fetchSeason(viewTick, true)) {
+            requisites(UI.viewBasin.fetchSeason(viewTick, true));
+        } else UI.viewBasin.fetchSeason(viewTick, true, false, s => {
+            requisites(s);
+        });
+    }
 
-// function deviceTurned(){
-//     toggleFullscreen();
-// }
+    // function deviceTurned(){
+    //     toggleFullscreen();
+    // }
 
-function wrapText(str, w) {
-    let newStr = "";
-    for (let i = 0, j = 0; i < str.length; i = j) {
-        if (str.charAt(i) === '\n') {
-            i++;
-            j++;
-            newStr += '\n';
-            continue;
-        }
-        j = str.indexOf('\n', i);
-        if (j === -1) j = str.length;
-        let line = str.slice(i, j);
-        while (textWidth(line) > w) {
-            let k = 0;
-            while (textWidth(line.slice(0, k)) <= w) k++;
-            k--;
-            if (k < 1) {
-                newStr += line.charAt(0) + '\n';
-                line = line.slice(1);
+    function wrapText(str, w) {
+        let newStr = "";
+        for (let i = 0, j = 0; i < str.length; i = j) {
+            if (str.charAt(i) === '\n') {
+                i++;
+                j++;
+                newStr += '\n';
                 continue;
             }
-            let l = line.lastIndexOf(' ', k - 1);
-            if (l !== -1) {
-                newStr += line.slice(0, l) + '\n';
-                line = line.slice(l + 1);
-                continue;
+            j = str.indexOf('\n', i);
+            if (j === -1) j = str.length;
+            let line = str.slice(i, j);
+            while (textWidth(line) > w) {
+                let k = 0;
+                while (textWidth(line.slice(0, k)) <= w) k++;
+                k--;
+                if (k < 1) {
+                    newStr += line.charAt(0) + '\n';
+                    line = line.slice(1);
+                    continue;
+                }
+                let l = line.lastIndexOf(' ', k - 1);
+                if (l !== -1) {
+                    newStr += line.slice(0, l) + '\n';
+                    line = line.slice(l + 1);
+                    continue;
+                }
+                let sub = line.slice(0, k);
+                l = sub.search(/\W(?=\w*$)/);
+                if (l !== -1) {
+                    newStr += line.slice(0, l + 1) + '\n';
+                    line = line.slice(l + 1);
+                    continue;
+                }
+                newStr += sub + '\n';
+                line = line.slice(k);
             }
-            let sub = line.slice(0, k);
-            l = sub.search(/\W(?=\w*$)/);
-            if (l !== -1) {
-                newStr += line.slice(0, l + 1) + '\n';
-                line = line.slice(l + 1);
-                continue;
+            newStr += line;
+        }
+        return newStr;
+    }
+
+    function countTextLines(str) {
+        let l = 1;
+        for (let i = 0; i < str.length; i++) if (str.charAt(i) === '\n') l++;
+        return l;
+    }
+
+    function ktsToMph(k, rnd) {
+        let val = k * 1.15078;
+        if (rnd) val = round(val / rnd) * rnd;
+        return val;
+    }
+
+    function ktsToKmh(k, rnd) {
+        let val = k * 1.852;
+        if (rnd) val = round(val / rnd) * rnd;
+        return val;
+    }
+
+    function oneMinToTenMin(w, rnd) {
+        let val = w * 7 / 8;    // simple ratio
+        if (rnd) val = round(val / rnd) * rnd;
+        return val;
+    }
+
+    function mbToInHg(mb, rnd) {
+        let val = mb * 0.02953;
+        if (rnd) val = round(val / rnd) * rnd;
+        return val;
+    }
+
+    // converts a radians-from-east angle into a degrees-from-north heading with compass direction for display formatting
+    function compassHeading(rad) {
+        // force rad into range of zero to two-pi
+        if (rad < 0)
+            rad = 2 * PI - (-rad % (2 * PI));
+        else
+            rad = rad % (2 * PI);
+        // convert heading from radians-from-east to degrees-from-north
+        let heading = map(rad, 0, 2 * PI, 90, 450) % 360;
+        let compass;
+        // calculate compass direction
+        if (heading < 11.25)
+            compass = 'N';
+        else if (heading < 33.75)
+            compass = 'NNE';
+        else if (heading < 56.25)
+            compass = 'NE';
+        else if (heading < 78.75)
+            compass = 'ENE';
+        else if (heading < 101.25)
+            compass = 'E';
+        else if (heading < 123.75)
+            compass = 'ESE';
+        else if (heading < 146.25)
+            compass = 'SE';
+        else if (heading < 168.75)
+            compass = 'SSE';
+        else if (heading < 191.25)
+            compass = 'S';
+        else if (heading < 213.75)
+            compass = 'SSW';
+        else if (heading < 236.25)
+            compass = 'SW';
+        else if (heading < 258.75)
+            compass = 'WSW';
+        else if (heading < 281.25)
+            compass = 'W';
+        else if (heading < 303.75)
+            compass = 'WNW';
+        else if (heading < 326.25)
+            compass = 'NW';
+        else if (heading < 348.75)
+            compass = 'NNW';
+        else
+            compass = 'N';
+        heading = round(heading);
+        return heading + '\u00B0 '/* degree sign */ + compass;
+    }
+
+    function damageDisplayNumber(d) {
+        if (d === 0) return "none";
+        if (d < 50000000) return "minimal";
+        if (d < 1000000000) return "$ " + (round(d / 1000) / 1000) + " M";
+        if (d < 1000000000000) return "$ " + (round(d / 1000000) / 1000) + " B";
+        return "$ " + (round(d / 1000000000) / 1000) + " T";
+    }
+
+    function formatDate(m) {
+        if (m instanceof moment) {
+            const f = 'HH[z] MMM DD';
+            let str = m.format(f);
+            let y = m.year();
+            let bce;
+            if (y < 1) {
+                y = 1 - y;
+                bce = true;
             }
-            newStr += sub + '\n';
-            line = line.slice(k);
+            str += ' ' + zeroPad(y, 4);
+            if (bce) str += ' B.C.E.';
+            return str;
         }
-        newStr += line;
     }
-    return newStr;
-}
 
-function countTextLines(str) {
-    let l = 1;
-    for (let i = 0; i < str.length; i++) if (str.charAt(i) === '\n') l++;
-    return l;
-}
-
-function ktsToMph(k, rnd) {
-    let val = k * 1.15078;
-    if (rnd) val = round(val / rnd) * rnd;
-    return val;
-}
-
-function ktsToKmh(k, rnd) {
-    let val = k * 1.852;
-    if (rnd) val = round(val / rnd) * rnd;
-    return val;
-}
-
-function oneMinToTenMin(w, rnd) {
-    let val = w * 7 / 8;    // simple ratio
-    if (rnd) val = round(val / rnd) * rnd;
-    return val;
-}
-
-function mbToInHg(mb, rnd) {
-    let val = mb * 0.02953;
-    if (rnd) val = round(val / rnd) * rnd;
-    return val;
-}
-
-// converts a radians-from-east angle into a degrees-from-north heading with compass direction for display formatting
-function compassHeading(rad) {
-    // force rad into range of zero to two-pi
-    if (rad < 0)
-        rad = 2 * PI - (-rad % (2 * PI));
-    else
-        rad = rad % (2 * PI);
-    // convert heading from radians-from-east to degrees-from-north
-    let heading = map(rad, 0, 2 * PI, 90, 450) % 360;
-    let compass;
-    // calculate compass direction
-    if (heading < 11.25)
-        compass = 'N';
-    else if (heading < 33.75)
-        compass = 'NNE';
-    else if (heading < 56.25)
-        compass = 'NE';
-    else if (heading < 78.75)
-        compass = 'ENE';
-    else if (heading < 101.25)
-        compass = 'E';
-    else if (heading < 123.75)
-        compass = 'ESE';
-    else if (heading < 146.25)
-        compass = 'SE';
-    else if (heading < 168.75)
-        compass = 'SSE';
-    else if (heading < 191.25)
-        compass = 'S';
-    else if (heading < 213.75)
-        compass = 'SSW';
-    else if (heading < 236.25)
-        compass = 'SW';
-    else if (heading < 258.75)
-        compass = 'WSW';
-    else if (heading < 281.25)
-        compass = 'W';
-    else if (heading < 303.75)
-        compass = 'WNW';
-    else if (heading < 326.25)
-        compass = 'NW';
-    else if (heading < 348.75)
-        compass = 'NNW';
-    else
-        compass = 'N';
-    heading = round(heading);
-    return heading + '\u00B0 '/* degree sign */ + compass;
-}
-
-function damageDisplayNumber(d) {
-    if (d === 0) return "none";
-    if (d < 50000000) return "minimal";
-    if (d < 1000000000) return "$ " + (round(d / 1000) / 1000) + " M";
-    if (d < 1000000000000) return "$ " + (round(d / 1000000) / 1000) + " B";
-    return "$ " + (round(d / 1000000000) / 1000) + " T";
-}
-
-function formatDate(m) {
-    if (m instanceof moment) {
-        const f = 'HH[z] MMM DD';
-        let str = m.format(f);
-        let y = m.year();
-        let bce;
-        if (y < 1) {
-            y = 1 - y;
-            bce = true;
+    function seasonName(y, h) {
+        if (h === undefined) h = UI.viewBasin instanceof Basin && UI.viewBasin.SHem;
+        let str = '';
+        let eraYear = yr => {
+            if (yr < 1) return 1 - yr;
+            return yr;
+        };
+        const bce = ' B.C.E.';
+        if (h) {
+            str += zeroPad(eraYear(y - 1), 4);
+            if (y === 1) str += bce;
+            str += '-' + zeroPad(eraYear(y) % 100, 2);
+            if (y < 1) str += bce;
+            return str;
         }
-        str += ' ' + zeroPad(y, 4);
-        if (bce) str += ' B.C.E.';
-        return str;
-    }
-}
-
-function seasonName(y, h) {
-    if (h === undefined) h = UI.viewBasin instanceof Basin && UI.viewBasin.SHem;
-    let str = '';
-    let eraYear = yr => {
-        if (yr < 1) return 1 - yr;
-        return yr;
-    };
-    const bce = ' B.C.E.';
-    if (h) {
-        str += zeroPad(eraYear(y - 1), 4);
-        if (y === 1) str += bce;
-        str += '-' + zeroPad(eraYear(y) % 100, 2);
+        str += zeroPad(eraYear(y), 4);
         if (y < 1) str += bce;
         return str;
     }
-    str += zeroPad(eraYear(y), 4);
-    if (y < 1) str += bce;
-    return str;
 }
