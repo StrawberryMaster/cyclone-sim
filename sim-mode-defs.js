@@ -891,8 +891,8 @@ STORM_ALGORITHM.defaults.core = function (sys, u) {
 
     let targetWarmCore = (lnd ?
         sys.lowerWarmCore :
-        max(pow(map(SST, 10, 25, 0, 1, true), 3), sys.lowerWarmCore)
-    ) * map(jet, 0, 75, sq(1 - sys.depth), 1, true);
+        Math.max(Math.pow(map(SST, 10, 25, 0, 1, true), 3), sys.lowerWarmCore)
+    ) * map(jet, 0, 75, Math.pow(1 - sys.depth, 2), 1, true);
     sys.lowerWarmCore = lerp(sys.lowerWarmCore, targetWarmCore, sys.lowerWarmCore > targetWarmCore ? map(jet, 0, 75, 0.4, 0.06, true) : 0.04);
     sys.upperWarmCore = lerp(sys.upperWarmCore, sys.lowerWarmCore, sys.lowerWarmCore > sys.upperWarmCore ? 0.05 : 0.4);
     sys.lowerWarmCore = constrain(sys.lowerWarmCore, 0, 1);
