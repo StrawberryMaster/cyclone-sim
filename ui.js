@@ -685,7 +685,7 @@ UI.init = function () {
                     return a > b ? 1 : -1;
                 });
             });
-        }, 'Fetching Saved Basins...').catch(e => {
+        }, 'Fetching saved basins...').catch(e => {
             console.error(e);
         });
     };
@@ -2162,17 +2162,12 @@ function mouseInCanvas() {
 }
 
 function mouseClicked() {
-    if (mouseInCanvas() && waitingFor < 1) {
-        UI.click();
-        return false;
-    }
+    return (mouseInCanvas() && waitingFor < 1) ? (UI.click(), false) : undefined;
 }
 
 function selectStorm(s) {
-    if (s instanceof Storm) {
-        selectedStorm = s;
-        stormInfoPanel.target = s;
-    } else selectedStorm = undefined;
+    selectedStorm = s instanceof Storm ? s : undefined;
+    stormInfoPanel.target = selectedStorm;
 }
 
 function keyPressed() {
