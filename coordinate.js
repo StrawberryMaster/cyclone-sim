@@ -4,9 +4,9 @@ class Coordinate {
     }
 
     set(long, lat) {
-        this.longitude = ((long + 180) % 360 + 360) % 360 - 180;
-        this.latitude = constrain(lat, -90, 90);
-    }
+        this.longitude = ((long % 360) + 360) % 360 - 180;
+        this.latitude = Math.constrain(lat, -90, 90);
+      }
 
     add(long, lat) {
         if (long instanceof Coordinate) {
@@ -22,9 +22,9 @@ class Coordinate {
             lat = long.latitude;
             long = long.longitude;
         }
-        let long_dist = abs(this.longitude - long);
-        long_dist = min(long_dist, 360 - long_dist);
-        let lat_dist = abs(this.latitude - lat);
+        let long_dist = this.longitude - long;
+        long_dist = Math.min(long_dist, 360 - long_dist);
+        let lat_dist = this.latitude - lat;
         return Math.hypot(long_dist, lat_dist);
     }
 
