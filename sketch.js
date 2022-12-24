@@ -127,19 +127,20 @@ function draw() {
                     return;
                 }
                 stormIcons.clear();
+                // Increment simSpeedFrameCounter and check if it's time to advance the simulation
                 if (!paused) {
                     simSpeedFrameCounter++;
-                    simSpeedFrameCounter %= pow(2, simSpeed);
+                    simSpeedFrameCounter &= (Math.pow(2, simSpeed) - 1);
                     if (simSpeedFrameCounter === 0) UI.viewBasin.advanceSim();
                 }
                 keyRepeatFrameCounter++;
                 if (keyIsPressed && document.activeElement !== textInput && (keyRepeatFrameCounter >= KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter === 0) && keyRepeatFrameCounter % KEY_REPEATER === 0) {
                     if (paused && primaryWrapper.showing) {
                         if (keyCode === LEFT_ARROW && viewTick >= ADVISORY_TICKS) {
-                            changeViewTick(ceil(viewTick / ADVISORY_TICKS - 1) * ADVISORY_TICKS);
+                            changeViewTick(Math.ceil(viewTick / ADVISORY_TICKS - 1) * ADVISORY_TICKS);
                         } else if (keyCode === RIGHT_ARROW) {
                             let t;
-                            if (viewTick < UI.viewBasin.tick - ADVISORY_TICKS) t = floor(viewTick / ADVISORY_TICKS + 1) * ADVISORY_TICKS;
+                            if (viewTick < UI.viewBasin.tick - ADVISORY_TICKS) t = Math.floor(viewTick / ADVISORY_TICKS + 1) * ADVISORY_TICKS;
                             else t = UI.viewBasin.tick;
                             changeViewTick(t);
                         }
@@ -192,7 +193,7 @@ function draw() {
     } catch (err) {            // BSOD
         resetMatrix();
         colorMode(RGB);
-        background(15, 15, 200);
+        background(15, 60, 200);
         fill(255);
         textSize(24);
         textAlign(LEFT, TOP);
@@ -219,22 +220,25 @@ class Settings {
                 v = localStorage.getItem(lsKey);
                 if (v) {
                     v = decodeB36StringArray(v);
-                    db.settings.put(v, DB_KEY_SETTINGS).then(() => {
-                        localStorage.removeItem(lsKey);
-                    }).catch(err => {
-                        console.error(err);
-                    });
-                } else v = [];
+                    db.settings.put(v, DB_KEY_SETTINGS)
+                        .catch(err => {
+                            console.error(err);
+                        })
+                        .then(() => {
+                            localStorage.removeItem(lsKey);
+                        });
+                } else {
+                    v = [];
+                }
             }
             order.forEach((key, i) => {
                 this[key] = v.length > 0 ? v.pop() : defaults[i];
             });
-            let sf = k => (v, v2) => {
-                this.set(k, v, v2);
-            };
             order.forEach(key => {
-                this[`set${key.charAt(0).toUpperCase()}${key.slice(1)}`] = sf(key);
-            });
+                this[`set${key.charAt(0).toUpperCase()}${key.slice(1)}`] = (v, v2) => {
+                    this.set(key, v, v2);
+                };
+            });            
         });
     }
 
