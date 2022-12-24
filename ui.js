@@ -2313,9 +2313,7 @@ function wrapText(str, w) {
 }
 
 function countTextLines(str) {
-    let l = 1;
-    for (let i = 0; i < str.length; i++) if (str.charAt(i) === '\n') l++;
-    return l;
+    return str.split('\n').length;
 }
 
 function ktsToMph(k, rnd) {
