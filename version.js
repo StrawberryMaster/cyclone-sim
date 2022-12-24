@@ -1,22 +1,18 @@
-const versionLink = document.getElementById("version");
+const versionLink = document.getElementById('version');
 
 const Version = {
-  number: "0.0",
-  prefix: "v",
+  number: '0.0',
+  prefix: 'v',
 };
-
-function versionLinkUpdate() {
-  versionLink.innerHTML = `${Version.prefix}${Version.number}`;
-}
 
 function setVersion(p, n) {
   Version.prefix = p;
   Version.number = n;
-  versionLinkUpdate();
+  versionLink.innerHTML = `${Version.prefix}${Version.number}`;
 }
 
-if (versionLink.tagName === "A") {
-  versionLink.setAttribute("href", "./changelog.txt");
+if (versionLink.tagName === 'A') {
+  versionLink.setAttribute('href', './changelog.txt');
 }
 
-versionLinkUpdate();
+versionLink.innerHTML = `${Version.prefix}${Version.number}`;
