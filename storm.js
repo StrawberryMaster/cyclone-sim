@@ -14,7 +14,7 @@ class Storm {
         this.designations = {
             primary: [],
             secondary: [],
-          };
+        };
 
         this.birthTime = this.current ? basin.tick : undefined;     // tick formed as a disturbance/low
         this.formationTime = undefined;                             // tick formed as a TC
@@ -81,13 +81,13 @@ class Storm {
             D.secondary.forEach(d => {
                 if (!(d instanceof Designation)) return;
                 if (d.activeAt(t)) {
-                  if (d.isName() && !snamed) {
-                    s = [];
-                    snamed = true;
-                  }
-                  if (d.isName() || !snamed) s.push(d);
+                    if (d.isName() && !snamed) {
+                        s = [];
+                        snamed = true;
+                    }
+                    if (d.isName() || !snamed) s.push(d);
                 }
-              });
+            });
             s.sort((a, b) => a.effectiveTicks[0] - b.effectiveTicks[0]);
             let ii;
             for (let i = s.length - 1; i >= 0; i--) {

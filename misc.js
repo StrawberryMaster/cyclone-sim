@@ -144,7 +144,7 @@ function waitForAsyncProcess(func, desc, ...args) {  // add .then() callbacks in
 
 async function makeAsyncProcess(func, ...args) {
     return await setTimeout(() => func(...args), 0);
-  } 
+}
 
 function upgradeLegacySaves() {
     return waitForAsyncProcess(() => {

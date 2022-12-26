@@ -238,7 +238,7 @@ class Settings {
                 this[`set${key.charAt(0).toUpperCase()}${key.slice(1)}`] = (v, v2) => {
                     this.set(key, v, v2);
                 };
-            });            
+            });
         });
     }
 

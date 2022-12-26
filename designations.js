@@ -59,7 +59,7 @@ class Designation {
         let h = this.hideTicks.find(n => t >= n);
         if (e && (!h || e > h)) return e;
         return false;
-    }  
+    }
 
     hide(t) {
         if (typeof t === 'number') this.hideTicks.push(t);
