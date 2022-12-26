@@ -2404,21 +2404,13 @@ function formatDate(m) {
 }
 
 function seasonName(y, h) {
-    const h = (h === undefined) ? (UI.viewBasin instanceof Basin && UI.viewBasin.SHem) : h;
-    let eraYear = yr => {
-        if (yr < 1) return 1 - yr;
-        return yr;
-    };
+    h = h || (UI.viewBasin instanceof Basin && UI.viewBasin.SHem);
+    const eraYear = yr => yr < 1 ? 1 - yr : yr;
     const bce = ' B.C.E.';
-    let str = '';
+    let str = zeroPad(eraYear(y), 4);
     if (h) {
-        str += `${zeroPad(eraYear(y - 1), 4)}`;
-        if (y === 1) str += bce;
-        str += `-${zeroPad(eraYear(y) % 100, 2)}`;
-        if (y < 1) str += bce;
-        return str;
+        str += '-' + zeroPad(eraYear(y + 1) % 100, 2);
     }
-    str += `${zeroPad(eraYear(y), 4)}`;
     if (y < 1) str += bce;
     return str;
 }
