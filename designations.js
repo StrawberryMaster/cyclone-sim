@@ -55,19 +55,11 @@ class Designation {
     }
 
     activeAt(t) {
-        let e;
-        let h;
-        for (let i = 0; i < this.effectiveTicks.length; i++) {
-            let n = this.effectiveTicks[i];
-            if (t >= n && (!e || n > e)) e = n;
-        }
-        for (let i = 0; i < this.hideTicks.length; i++) {
-            let n = this.hideTicks[i];
-            if (t >= n && (!h || n > h)) h = n;
-        }
+        let e = this.effectiveTicks.find(n => t >= n);
+        let h = this.hideTicks.find(n => t >= n);
         if (e && (!h || e > h)) return e;
         return false;
-    }
+    }  
 
     hide(t) {
         if (typeof t === 'number') this.hideTicks.push(t);
