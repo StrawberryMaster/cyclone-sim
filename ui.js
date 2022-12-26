@@ -2398,35 +2398,27 @@ function damageDisplayNumber(d) {
 function formatDate(m) {
     if (m instanceof moment) {
         const f = 'HH[z] MMM DD';
-        let str = m.format(f);
-        let y = m.year();
-        let bce;
-        if (y < 1) {
-            y = 1 - y;
-            bce = true;
-        }
-        str += ' ' + zeroPad(y, 4);
-        if (bce) str += ' B.C.E.';
-        return str;
+        let str = `${m.format(f)} ${zeroPad(Math.abs(m.year()), 4)}`;
+        return m.year() < 1 ? `${str} B.C.E.` : str;
     }
 }
 
 function seasonName(y, h) {
-    if (h === undefined) h = UI.viewBasin instanceof Basin && UI.viewBasin.SHem;
-    let str = '';
+    const h = (h === undefined) ? (UI.viewBasin instanceof Basin && UI.viewBasin.SHem) : h;
     let eraYear = yr => {
         if (yr < 1) return 1 - yr;
         return yr;
     };
     const bce = ' B.C.E.';
+    let str = '';
     if (h) {
-        str += zeroPad(eraYear(y - 1), 4);
+        str += `${zeroPad(eraYear(y - 1), 4)}`;
         if (y === 1) str += bce;
-        str += '-' + zeroPad(eraYear(y) % 100, 2);
+        str += `-${zeroPad(eraYear(y) % 100, 2)}`;
         if (y < 1) str += bce;
         return str;
     }
-    str += zeroPad(eraYear(y), 4);
+    str += `${zeroPad(eraYear(y), 4)}`;
     if (y < 1) str += bce;
     return str;
 }
