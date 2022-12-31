@@ -20,7 +20,7 @@ let paused,
     magnifyingGlass,
     snow,
     simSpeed,
-    simSpeedFrameCounter,
+    lastUpdateTimestamp,
     keyRepeatFrameCounter,
     viewTick,
     selectedStorm,
@@ -93,7 +93,7 @@ function setup() {
     }
 
     simSpeed = 0; // The exponent for the simulation speed (0 is full-speed, 1 is half-speed, etc.)
-    simSpeedFrameCounter = 0; // Counts frames of draw() while unpaused; modulo 2^simSpeed to advance sim when 0
+    lastUpdateTimestamp = performance.now(); // Keeps track of how much time has passed since the last simulation step to control the simulation at varying speeds
     keyRepeatFrameCounter = 0;
 
     upgradeLegacySaves();
@@ -120,11 +120,11 @@ function draw() {
                     return;
                 }
                 stormIcons.clear();
-                // Increment simSpeedFrameCounter and check if it's time to advance the simulation
                 if (!paused) {
-                    simSpeedFrameCounter++;
-                    simSpeedFrameCounter &= (Math.pow(2, simSpeed) - 1);
-                    if (simSpeedFrameCounter === 0) UI.viewBasin.advanceSim();
+                    const step = STEP / Math.pow(2, simSpeed);
+                    let delta = Math.floor((performance.now() - lastUpdateTimestamp) / step);
+                    UI.viewBasin.advanceSim(delta);
+                    lastUpdateTimestamp += delta * step;
                 }
                 keyRepeatFrameCounter++;
                 if (keyIsPressed && document.activeElement !== textInput && (keyRepeatFrameCounter >= KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter === 0) && keyRepeatFrameCounter % KEY_REPEATER === 0) {
