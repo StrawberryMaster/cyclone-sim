@@ -11,10 +11,10 @@ const DIAMETER = 20;    // Storm icon diameter
 const PERLIN_ZOOM = 100;    // Resolution for perlin noise
 const TICK_DURATION = 3600000;  // How long in sim time does a tick last in milliseconds (1 hour)
 const ADVISORY_TICKS = 6;    // Number of ticks per advisory
-const YEAR_LENGTH = 365.2425*24;        // The length of a year in ticks; used for seasonal activity
+const YEAR_LENGTH = 365.2425 * 24;        // The length of a year in ticks; used for seasonal activity
 const STEP = 30;            // Number of milliseconds in real time a simulation step lasts at default speed
 const NHEM_DEFAULT_YEAR = moment.utc().year();
-const SHEM_DEFAULT_YEAR = moment.utc().month() < 6 ? NHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR+1;
+const SHEM_DEFAULT_YEAR = moment.utc().month() < 6 ? NHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR + 1;
 const DEPRESSION_LETTER = "H";
 const WINDSPEED_ROUNDING = 5;
 // const MAP_DEFINITION = 2;   // normal scaler for the land map
@@ -45,7 +45,7 @@ const MAP_TYPES = [     // Land generation controls for different map types
     {   // "Two Continents" map type
         form: "linear",
         landBiasFactors: [
-            5/8,        // Where the "center" should be for land/ocean bias (0-1 scale from west to east)
+            5 / 8,        // Where the "center" should be for land/ocean bias (0-1 scale from west to east)
             0.15,       // Bias factor for the west edge (positive = land more likely, negative = sea more likely)
             -0.3,       // Bias factor for the "center" (as defined by .landBiasFactors[0])
             0.1         // Bias factor for the east edge
@@ -54,7 +54,7 @@ const MAP_TYPES = [     // Land generation controls for different map types
     {   // "East Continent" map type
         form: "linear",
         landBiasFactors: [
-            5/8,
+            5 / 8,
             -0.3,
             -0.3,
             0.15
@@ -63,7 +63,7 @@ const MAP_TYPES = [     // Land generation controls for different map types
     {   // "West Continent" map type
         form: "linear",
         landBiasFactors: [
-            1/2,
+            1 / 2,
             0.15,
             -0.3,
             -0.3
@@ -72,7 +72,7 @@ const MAP_TYPES = [     // Land generation controls for different map types
     {   // "Island Ocean" map type
         form: "linear",
         landBiasFactors: [
-            1/2,
+            1 / 2,
             -0.28,
             -0.28,
             -0.28
@@ -81,9 +81,9 @@ const MAP_TYPES = [     // Land generation controls for different map types
     {   // "Central Continent" map type
         form: "radial",
         landBiasFactors: [
-            1/2,    // Where the east-west center should be (0-1 scale from west to east)
-            1/2,    // Where the north-south center should be (0-1 scale from north to south)
-            1/2,    // First control distance (in terms of the geometric mean of the canvas dimensions)
+            1 / 2,    // Where the east-west center should be (0-1 scale from west to east)
+            1 / 2,    // Where the north-south center should be (0-1 scale from north to south)
+            1 / 2,    // First control distance (in terms of the geometric mean of the canvas dimensions)
             1,      // Second control distance
             0.15,   // Bias factor for the center
             -0.27,   // Bias factor for the first control distance
@@ -93,9 +93,9 @@ const MAP_TYPES = [     // Land generation controls for different map types
     {   // "Central Inland Sea" map type
         form: "radial",
         landBiasFactors: [
-            1/2,
-            1/2,
-            3/8,
+            1 / 2,
+            1 / 2,
+            3 / 8,
             1,
             -0.3,
             0.2,
@@ -191,7 +191,7 @@ const KEY_F11 = 122;
 const KEY_REPEAT_COOLDOWN = 15;
 const KEY_REPEATER = 5;
 const MAX_SNOW_LAYERS = 50;
-const SNOW_SEASON_OFFSET = 5/6;
+const SNOW_SEASON_OFFSET = 5 / 6;
 const ENV_LAYER_TILE_SIZE = 20;
 const NC_OFFSET_RANDOM_FACTOR = 4096;
 const ACE_WIND_THRESHOLD = 34;
@@ -270,34 +270,34 @@ const HELP_TEXT = "Keyboard Controls:\n" +
 
 const COLORS = {};      // For storing all colors used in the graphics
 
-function defineColors(){    // Since p5 color() function doesn't work until setup(), this is called in setup()
-    COLORS.bg = color(10,55,155);
+function defineColors() {    // Since p5 color() function doesn't work until setup(), this is called in setup()
+    COLORS.bg = color(10, 55, 155);
     COLORS.storm = {};
-    COLORS.storm[EXTROP] = color(220,220,220);
-    COLORS.storm[TROPWAVE] = color(130,130,240);
+    COLORS.storm[EXTROP] = color(220, 220, 220);
+    COLORS.storm[TROPWAVE] = color(130, 130, 240);
     COLORS.storm.extL = "red";
     COLORS.land = [];
-    COLORS.land.push([0.85, color(190,190,190)]);
-    COLORS.land.push([0.8, color(160,160,160)]);
-    COLORS.land.push([0.75, color(145,115,90)]);
-    COLORS.land.push([0.7, color(160,125,100)]);
-    COLORS.land.push([0.65, color(35,145,35)]);
-    COLORS.land.push([0.6, color(35,160,35)]);
-    COLORS.land.push([0.55, color(30,175,30)]);
-    COLORS.land.push([0.53, color(205,205,105)]);
-    COLORS.land.push([0.5, color(230,230,105)]);
+    COLORS.land.push([0.85, color(190, 190, 190)]);
+    COLORS.land.push([0.8, color(160, 160, 160)]);
+    COLORS.land.push([0.75, color(145, 115, 90)]);
+    COLORS.land.push([0.7, color(160, 125, 100)]);
+    COLORS.land.push([0.65, color(35, 145, 35)]);
+    COLORS.land.push([0.6, color(35, 160, 35)]);
+    COLORS.land.push([0.55, color(30, 175, 30)]);
+    COLORS.land.push([0.53, color(205, 205, 105)]);
+    COLORS.land.push([0.5, color(230, 230, 105)]);
     COLORS.snow = color(240);
-    COLORS.outBasin = color(45,70,120);
-    COLORS.subBasinOutline = color(255,255,0);
+    COLORS.outBasin = color(45, 70, 120);
+    COLORS.subBasinOutline = color(255, 255, 0);
     COLORS.UI = {};
-    COLORS.UI.bar = color(200,100);
-    COLORS.UI.box = color(200,170);
-    COLORS.UI.buttonBox = color(200,170);
+    COLORS.UI.bar = color(200, 100);
+    COLORS.UI.box = color(200, 170);
+    COLORS.UI.buttonBox = color(200, 170);
     COLORS.UI.buttonHover = color(200);
     COLORS.UI.text = color(0);
     COLORS.UI.greyText = color(130);
-    COLORS.UI.redText = color(240,0,0);
+    COLORS.UI.redText = color(240, 0, 0);
     COLORS.UI.nonSelectedInput = color(70);
     COLORS.UI.input = color(255);
-    COLORS.UI.loadingSymbol = color(0,40,85);
+    COLORS.UI.loadingSymbol = color(0, 40, 85);
 }
