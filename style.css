@@ -47,3 +47,8 @@ ul {
     list-style: none;
     text-align: center;
 }
+@media (prefers-color-scheme: dark) {
+    body {
+        background: rgba(0, 0, 0, 0.7);
+    }
+}
