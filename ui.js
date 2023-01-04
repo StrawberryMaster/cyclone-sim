@@ -1382,23 +1382,23 @@ UI.init = function () {
     }, function () {
         if (!panel_timeline_container.showing) stormInfoPanel.target = selectedStorm || UI.viewBasin.getSeason(viewTick);
         panel_timeline_container.toggleShow();
-    }).append(false,-29,0,24,10,function(s){     // Speed increase
+    }).append(false, -29, 0, 24, 10, function (s) {     // Speed increase
         let grey = simSpeed == MAX_SPEED;
         s.button('', false, undefined, grey);
-        triangle(4,2,12,5,4,8);
-        triangle(12,2,20,5,12,8);
-    },function(){
-        if(simSpeed < MAX_SPEED)
+        triangle(4, 2, 12, 5, 4, 8);
+        triangle(12, 2, 20, 5, 12, 8);
+    }, function () {
+        if (simSpeed < MAX_SPEED)
             simSpeed++;
-    }).append(false,0,14,24,10,function(s){     // Speed decrease
+    }).append(false, 0, 14, 24, 10, function (s) {     // Speed decrease
         let grey = simSpeed == MIN_SPEED;
         s.button('', false, undefined, grey);
-        triangle(20,2,12,5,20,8);
-        triangle(12,2,4,5,12,8);
-    },function(){
-        if(simSpeed > MIN_SPEED)
+        triangle(20, 2, 12, 5, 20, 8);
+        triangle(12, 2, 4, 5, 12, 8);
+    }, function () {
+        if (simSpeed > MIN_SPEED)
             simSpeed--;
-    }).append(false, -29, 0, 24, 24, function (s) {  // Pause/resume button
+    }).append(false, -29, -14, 24, 24, function (s) {  // Pause/resume button
         s.button('');
         if (paused) triangle(3, 3, 21, 12, 3, 21);
         else {
@@ -1424,15 +1424,15 @@ UI.init = function () {
                 txtStr = sName + " - ACE: " + selectedStorm.ACE;
             }
         } else {
-            if(paused)
+            if (paused)
                 txtStr = "Paused";
-            else if(simSpeed < -1)
+            else if (simSpeed < -1)
                 txtStr = `1/${Math.pow(2, -simSpeed)} Speed`;
-            else if(simSpeed === -1)
+            else if (simSpeed === -1)
                 txtStr = 'Half-Speed';
-            else if(simSpeed === 0)
+            else if (simSpeed === 0)
                 txtStr = 'Normal-Speed';
-            else if(simSpeed === 1)
+            else if (simSpeed === 1)
                 txtStr = 'Double-Speed';
             else
                 txtStr = `${Math.pow(2, simSpeed)}x Speed`;
@@ -2221,11 +2221,11 @@ function keyPressed() {
     keyRepeatFrameCounter = -1;
     switch (key) {
         case " ":
-        if (UI.viewBasin && primaryWrapper.showing) {
-            paused = !paused;
-            lastUpdateTimestamp = performance.now();
-        }
-        break;
+            if (UI.viewBasin && primaryWrapper.showing) {
+                paused = !paused;
+                lastUpdateTimestamp = performance.now();
+            }
+            break;
         case "a":
             if (UI.viewBasin && paused && primaryWrapper.showing) UI.viewBasin.advanceSim();
             break;
@@ -2233,25 +2233,11 @@ function keyPressed() {
             simSettings.setShowStrength("toggle");
             break;
         case "e":
-        if(UI.viewBasin) UI.viewBasin.env.displayNext();
-        break;
-        case "t":
-        simSettings.setTrackMode("incmod",4);
-        refreshTracks(true);
-        break;
-        case "m":
-        simSettings.setShowMagGlass("toggle");
-        if(UI.viewBasin) UI.viewBasin.env.updateMagGlass();
-        break;
-        default:
-        switch(keyCode){
-            case KEY_LEFT_BRACKET:
-            if(simSpeed > MIN_SPEED)
-                simSpeed--;
+            if (UI.viewBasin) UI.viewBasin.env.displayNext();
             break;
-            case KEY_RIGHT_BRACKET:
-            if(simSpeed < MAX_SPEED)
-                simSpeed++;
+        case "t":
+            simSettings.setTrackMode("incmod", 4);
+            refreshTracks(true);
             break;
         case "m":
             simSettings.setShowMagGlass("toggle");
@@ -2260,12 +2246,12 @@ function keyPressed() {
         default:
             switch (keyCode) {
                 case KEY_LEFT_BRACKET:
-                    simSpeed++;
-                    if (simSpeed > 5) simSpeed = 5;
+                    if (simSpeed > MIN_SPEED)
+                        simSpeed--;
                     break;
                 case KEY_RIGHT_BRACKET:
-                    simSpeed--;
-                    if (simSpeed < 0) simSpeed = 0;
+                    if (simSpeed < MAX_SPEED)
+                        simSpeed++;
                     break;
                 case KEY_F11:
                     toggleFullscreen();
