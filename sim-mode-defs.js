@@ -455,49 +455,67 @@ ENV_DEFS.defaults.ULSteering = {
     displayName: 'Upper-level steering',
     version: 0,
     mapFunc: (u, x, y, z) => {
-        u.vec.set(1);                                                                           // reset vector
+        u.vec.set(1); // reset vector
 
-        const dx = u.modifiers.jetstreamDeltaX;                                                 // delta-x for jetstream differential (used for calculating wind direction in and near jetstream)
+        const dx = u.modifiers.jetstreamDeltaX; // delta-x for jetstream differential (used for calculating wind direction in and near jetstream)
 
         let m = u.noise(1);
 
         let s = seasonalSine(z);
-        let j0 = u.field('jetstream');                                                          // y-position of jetstream
-        let j1 = u.field('jetstream', x + dx);                                                     // y-position of jetstream dx to the east for differential
-        let j = abs(y - j0);                                                                      // distance of point north/south of jetstream
-        let jet = pow(2, 3 - j / u.modifiers.jetstreamHalfDecay);                               // power of jetstream at point
-        let jOP = pow(u.modifiers.jetstreamOverpowerBase, jet);                                 // factor for how strong other variables should be if 'overpowered' by jetstream
-        let jAngle = atan((j1 - j0) / dx) + map(y - j0, -50, 50, u.modifiers.jetstreamInwardAngle, -u.modifiers.jetstreamInwardAngle, true); // angle of jetstream at point
-        let trof = y > j0 ? pow(u.modifiers.troughBase, map(jAngle, -PI / 2, PI / 2, u.modifiers.troughExponentMax, u.modifiers.troughExponentMin)) * pow(0.7, j / 20) * jOP : 0; // pole-eastward push from jetstream dips
-        let tAngle = u.modifiers.troughAngle;                                                   // angle of push from jetstream dips
-        let ridging = 0.45 - j0 / HEIGHT - map(sqrt(map(s, -1, 1, 0, 1)), 0, 1, 0.15, 0);                     // how much 'ridge' or 'trough' there is from jetstream
-        // power of winds equatorward of jetstream
-        let hadley = (map(ridging, -0.3, 0.2, u.modifiers.hadleyUpperBound, u.modifiers.hadleyLowerBound, true) + map(m, 0, 1, -1.5, 1.5)) * jOP * (y > j0 ? 1 : 0);
-        // angle of winds equatorward of jetstream
-        let hAngle = map(ridging, -0.3, 0.2, u.modifiers.hadleyAngleMin, u.modifiers.hadleyAngleMax, true);
-        let ferrel = 2 * jOP * (y < j0 ? 1 : 0);                                                          // power of winds poleward of jetstream
-        let fAngle = 5 * PI / 8;                                                                    // angle of winds poleward of jetstream
+        let j0 = u.field('jetstream');  // y-position of jetstream
+        let j1 = u.field('jetstream', x + dx); // y-position of jetstream dx to the east for differential
+        let j = Math.abs(y - j0); // distance of point north/south of jetstream
+        let jet = 2 ** (3 - j / u.modifiers.jetstreamHalfDecay); // power of jetstream at point
+        let jOP = u.modifiers.jetstreamOverpowerBase ** jet; // angle of jetstream at point
+        let jAngle = Math.atan((j1 - j0) / dx) + map(y - j0, -50, 50, u.modifiers.jetstreamInwardAngle, -u.modifiers.jetstreamInwardAngle, true); // angle of jetstream at point
+        let trof = 0; // pole-eastward push from jetstream dips
+        let tAngle = u.modifiers.troughAngle; // angle of push from jetstream dips
+        let ridging = 0;  // how much 'ridge' or 'trough' there is from jetstream
+        let hadley = 0; // power of winds equatorward of jetstream
+        let hAngle = 0; // angle of winds equatorward of jetstream
+        let ferrel = 0; // power of winds poleward of jetstream
+        let fAngle = 5 * Math.PI / 8; // angle of winds poleward of jetstream
 
-        let a = map(u.noise(0), 0, 1, 0, 4 * TAU);                                                    // noise angle
-        m = pow(u.modifiers.noiseBase, map(m, 0, 1, u.modifiers.noiseExponentMin, u.modifiers.noiseExponentMax)) * jOP; // noise magnitude
+        switch (true) {
+            case y > j0:
+                trof = u.modifiers.troughBase ** map(jAngle, -Math.PI / 2, Math.PI / 2, u.modifiers.troughExponentMax, u.modifiers.troughExponentMin) * (0.7 ** (j / 20)) * jOP;
+                ridging = 0.45 - j0 / HEIGHT - map(Math.sqrt(map(s, -1, 1, 0, 1)), 0, 1, 0.15, 0);
+                hadley = (map(ridging, -0.3, 0.2, u.modifiers.hadleyUpperBound, u.modifiers.hadleyLowerBound, true) + map(m, 0, 1, -1.5, 1.5)) * jOP * (y > j0 ? 1 : 0);
+                hAngle = map(ridging, -0.3, 0.2, u.modifiers.hadleyAngleMin, u.modifiers.hadleyAngleMax, true);
+                ferrel = 2 * jOP * (y < j0 ? 1 : 0);
+                break;
+            case y < j0:
+                ridging = 0.45 - j0 / HEIGHT - map(Math.sqrt(map(s, -1, 1, 0, 1)), 0, 1, 0.15, 0);
+                hadley = (map(ridging, -0.3, 0.2, u.modifiers.hadleyUpperBound, u.modifiers.hadleyLowerBound, true) + map(m, 0, 1, -1.5, 1.5)) * jOP * (y > j0 ? 1 : 0);
+                hAngle = map(ridging, -0.3, 0.2, u.modifiers.hadleyAngleMin, u.modifiers.hadleyAngleMax, true);
+                ferrel = 2 * jOP * (y < j0 ? 1 : 0);
+                break;
+        }
 
         // apply noise
+        let a = map(u.noise(0), 0, 1, 0, 4 * TAU); // noise angle
+        m = u.modifiers.noiseBase ** map(m, 0, 1, u.modifiers.noiseExponentMin, u.modifiers.noiseExponentMax) * jOP; // noise magnitude
+
         u.vec.rotate(a);
         u.vec.mult(m);
 
         // apply UL winds
-        u.vec.add(jet * cos(jAngle), jet * sin(jAngle));                                             // apply jetstream
-        u.vec.add(trof * cos(tAngle), trof * sin(tAngle));                                           // apply trough push
-        u.vec.add(hadley * cos(hAngle), hadley * sin(hAngle));                                       // apply winds equatorward of jetstream
-        u.vec.add(ferrel * cos(fAngle), ferrel * sin(fAngle));                                       // apply winds poleward of jetstream
+        u.vec.x += jet * Math.cos(jAngle); // apply jetstream
+        u.vec.y += jet * Math.sin(jAngle);
+        u.vec.x += trof * Math.cos(tAngle); // apply trough push
+        u.vec.y += trof * Math.sin(tAngle);
+        u.vec.x += hadley * Math.cos(hAngle); // apply winds equatorward of jetstream
+        u.vec.y += hadley * Math.sin(hAngle);
+        u.vec.x += ferrel * Math.cos(fAngle); // apply winds poleward of jetstream
+        u.vec.y += ferrel * Math.sin(fAngle);
 
         return u.vec;
     },
     displayFormat: v => {
-        let speed = round(v.mag() * 100) / 100;
-        let direction = v.heading();
+        const speed = Math.round(v.mag() * 100) / 100;
+        const direction = v.heading();
         // speed is still in "u/hr" (coordinate units per hour) for now
-        return speed + ' u/hr ' + compassHeading(direction);
+        return `${speed} u/hr ${compassHeading(direction)}`;
     },
     vector: true,
     magMap: [0, 8, 0, 25],
@@ -623,9 +641,9 @@ ENV_DEFS.defaults.SSTAnomaly = {
         let v = u.noise(0);
         v = v * 2;
         let i = v < 1 ? -1 : 1;
-        v = 1 - abs(1 - v);
+        v = 1 - Math.abs(1 - v);
         if (v === 0) v = 0.000001;
-        v = log(v);
+        v = Math.log(v);
         let r;
         if (u.modifiers.r !== undefined) r = u.modifiers.r;
         else r = map(y, 0, HEIGHT, 6, 3);
