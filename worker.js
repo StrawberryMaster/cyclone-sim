@@ -28,17 +28,19 @@ class CSWorker {
         this.promiseHandlers = {};
         this.idCounter = 0;
 
-        this.worker.onmessage = e => {
-            let id = e.data.id;
-            if (e.data.error) return this.promiseHandlers[id].reject(e.data.error);
-            this.promiseHandlers[id].resolve(e.data.output);
+        this.worker.onmessage = (e) => {
+            const { id, error, output } = e.data;
+            if (error) {
+                return this.promiseHandlers[id].reject(error);
+            }
+            this.promiseHandlers[id].resolve(output);
             delete this.promiseHandlers[id];
         };
     }
 
     run(task, input) {
         return new Promise((resolve, reject) => {
-            let id = this.idCounter++;
+            const id = this.idCounter++;
             this.promiseHandlers[id] = { resolve, reject };
             this.worker.postMessage({ task, id, input });
         });

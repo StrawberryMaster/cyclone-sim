@@ -715,8 +715,11 @@ class Land {
         }
         colorCache.outBasin = { r: red(COLORS.outBasin), g: green(COLORS.outBasin), b: blue(COLORS.outBasin) };
 
-        // cache of booleans of whether a sub-basin is out-basin or not; cached as-needed from within pixel loop as sub-basin ids are assumed unknown
+        // Pre-populate outBasinCache with all known sub-basin ids and their corresponding outBasin values
         const outBasinCache = {};
+        for (let sb = 0; sb < this.basin.subBasins.length; sb++) {
+            outBasinCache[sb] = !this.basin.subInBasin(sb);
+        }
 
         for (let i = 0; i < W; i++) {
             for (let j = 0; j < H; j++) {
