@@ -1,3 +1,5 @@
+// for luxon - time calculations & stuff
+var DateTime = luxon.DateTime;
 class Basin {
     constructor(load, opts) {
         if (!opts) opts = {};
@@ -66,7 +68,7 @@ class Basin {
         //         DesignationSystem.australianRegionPortMoresby.clone().setCrossingModes(undefined,DESIG_CROSSMODE_KEEP)
         //     );
         // }
-        this.seed = opts.seed || moment().valueOf();
+        this.seed = opts.seed || DateTime.now().toMillis();
         this.env = new Environment(this);
         this.saveName = load || AUTOSAVE_SAVE_NAME;
         if (load) this.initialized = this.load();
@@ -113,8 +115,8 @@ class Basin {
         renderToDo = land.draw();
     }
 
-    advanceSimOneStep(){
-        let metadata = {needTrackRefresh: false, needForceTrackRefresh: false, needEnvLayerRefresh: false, needSave: false};
+    advanceSimOneStep() {
+        let metadata = { needTrackRefresh: false, needForceTrackRefresh: false, needEnvLayerRefresh: false, needSave: false };
         let vp = this.viewingPresent();
         let os = this.getSeason(-1);
         this.tick++;
@@ -129,7 +131,7 @@ class Basin {
         }
         if (!vp || curSeason !== vs) {
             metadata.needTrackRefresh = true;
-            metadata.needForceTrackRefresh = curSeason!==vs;
+            metadata.needForceTrackRefresh = curSeason !== vs;
         }
         this.env.wobble();    // random change in environment for future forecast realism
         for (let i = 0; i < this.activeSystems.length; i++) {   // update active storm systems
@@ -147,22 +149,22 @@ class Basin {
             }
         }
         metadata.needTrackRefresh |= stormKilled;   // redraw tracks whenever a storm system dies
-        if(this.tick % ADVISORY_TICKS === 0){   // redraw map layer and record environmental field state every advisory
+        if (this.tick % ADVISORY_TICKS === 0) {   // redraw map layer and record environmental field state every advisory
             metadata.needEnvLayerRefresh = true;
             this.env.record();
         }
         let curTime = this.tickMoment();
-        if(simSettings.doAutosave && (curTime.date()===1 || curTime.date()===15) && curTime.hour()===0)    // autosave at 00z on the 1st and 15th days of every month
+        if (simSettings.doAutosave && (curTime.date() === 1 || curTime.date() === 15) && curTime.hour() === 0)    // autosave at 00z on the 1st and 15th days of every month
             metadata.needSave = true;
         return metadata;
     }
 
-    advanceSim(steps){
-        if(steps === undefined)
+    advanceSim(steps) {
+        if (steps === undefined)
             steps = 1;
-        else if(steps === 0)
+        else if (steps === 0)
             return;
-        
+
         const advDiff = Math.floor((this.tick + steps) / ADVISORY_TICKS) - Math.floor(this.tick / ADVISORY_TICKS);
 
         let needTrackRefresh = false,
@@ -170,7 +172,7 @@ class Basin {
             needEnvLayerRefresh = false,
             needSave = false;
 
-        for(let i = 0; i < steps; i++){
+        for (let i = 0; i < steps; i++) {
             let metadata = this.advanceSimOneStep();
             needTrackRefresh |= metadata.needTrackRefresh;
             needForceTrackRefresh |= metadata.needForceTrackRefresh;
@@ -178,20 +180,20 @@ class Basin {
             needSave |= metadata.needSave;
         }
 
-        if(needTrackRefresh || advDiff >= 2)
+        if (needTrackRefresh || advDiff >= 2)
             refreshTracks(needForceTrackRefresh || advDiff >= 2);
 
-        if(advDiff === 1){
-            for(let i = 0; i < this.activeSystems.length; i++)
+        if (advDiff === 1) {
+            for (let i = 0; i < this.activeSystems.length; i++)
                 this.activeSystems[i].fetchStorm().renderTrack(true);
         }
 
-        if(needEnvLayerRefresh)
+        if (needEnvLayerRefresh)
             this.env.displayLayer();
-        else if(simSettings.showMagGlass)   // redraw magnifying glass if displayed (and if it wasn't already redrawn with the map layer)
+        else if (simSettings.showMagGlass)   // redraw magnifying glass if displayed (and if it wasn't already redrawn with the map layer)
             this.env.updateMagGlass();
-        
-        if(needSave)
+
+        if (needSave)
             this.save();
     }
 
@@ -368,14 +370,14 @@ class Basin {
                             let seas = this.seasons[n] = new Season(this, d);
                             this.expireSeasonTimer(n);
                             this.seasonsBusyLoading[n] = undefined;
-                            seas.lastAccessed = moment().valueOf();
+                            seas.lastAccessed = DateTime.now().toMillis();
                             return seas;
                         } else return undefined;
                     });
                 }, 'Retrieving Season...');
             }
         }
-        if (season) season.lastAccessed = moment().valueOf();
+        if (season) season.lastAccessed = DateTime.now().toMillis();
         else if (loadedRequired) throw new Error(LOADED_SEASON_REQUIRED_ERROR);
         if (callback instanceof Function) promise.then(callback);
         else if (callback) return promise;
@@ -623,7 +625,7 @@ class Basin {
                             let arr = decodeB36StringArray(parts.pop());
                             let flags = arr.pop() || 0;
                             this.startYear = arr.pop();
-                            this.seed = arr.pop() || moment().valueOf();
+                            this.seed = arr.pop() || DateTime.now().toMillis();
                             this.lastSaved = this.tick = arr.pop() || 0;
                             oldSeqNameIndex = arr.pop();
                             oldHurricaneStrengthTerm = arr.pop() || 0;
@@ -776,7 +778,7 @@ class Season {
         this.totalSystemCount = 0;
         // this.envRecordStarts = 0;
         this.modified = true;
-        this.lastAccessed = moment().valueOf();
+        this.lastAccessed = DateTime.now().toMillis();
         if (loaddata instanceof LoadData) this.load(loaddata);
     }
 
