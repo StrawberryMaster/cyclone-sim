@@ -186,11 +186,11 @@ function draw() {
     } catch (err) {            // BSOD
         resetMatrix();
         colorMode(RGB);
-        background(15, 60, 200);
+        background(170, 175, 173);
         fill(255);
         textSize(24);
         textAlign(LEFT, TOP);
-        text("Mona lost the election, and the game as well.", width / 16, height / 8);
+        text("Zoinks! Something went wrong.", width / 16, height / 8);
         textSize(15);
         text(err.stack, width / 16, height / 4);
         console.error(err);
