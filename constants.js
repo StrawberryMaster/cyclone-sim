@@ -13,8 +13,8 @@ const TICK_DURATION = 3600000;  // How long in sim time does a tick last in mill
 const ADVISORY_TICKS = 6;    // Number of ticks per advisory
 const YEAR_LENGTH = 365.2425 * 24;        // The length of a year in ticks; used for seasonal activity
 const STEP = 30;            // Number of milliseconds in real time a simulation step lasts at default speed
-const NHEM_DEFAULT_YEAR = moment.utc().year();
-const SHEM_DEFAULT_YEAR = moment.utc().month() < 6 ? NHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR + 1;
+const NHEM_DEFAULT_YEAR = luxon.DateTime.utc().year;
+const SHEM_DEFAULT_YEAR = luxon.DateTime.utc().month < 6 ? NHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR + 1;
 const DEPRESSION_LETTER = "H";
 const WINDSPEED_ROUNDING = 5;
 // const MAP_DEFINITION = 2;   // normal scaler for the land map
@@ -182,7 +182,7 @@ const MAP_TYPES = [     // Land generation controls for different map types
 const EARTH_MAP_PATH = 'resources/earth.png';
 
 // Storm types
-const StormTypes = Object.freeze({
+const StormTypes = Object({
     EXTROP: 0,
     SUBTROP: 1,
     TROP: 2,
@@ -198,7 +198,7 @@ const KEY_REPEAT_COOLDOWN = 15;
 const KEY_REPEATER = 5;
 
 // Designation modes
-const DesigCrossmode = Object.freeze({
+const DesigCrossmode = Object({
     ALWAYS: 0,
     STRICT_ALWAYS: 1,
     REGEN: 2,
@@ -236,7 +236,7 @@ const DB_KEY_SETTINGS = "settings";
 const LOADED_SEASON_EXPIRATION = 150000;    // minimum duration in miliseconds after a season was last accessed before it unloads (2.5 minutes)
 
 // Save format versions
-const Format = Object.freeze({
+const Format = Object({
     WITH_SAVED_SEASONS: 1,
     WITH_INDEXEDDB: 2,
     WITH_IMPROVED_ENV: 3,
