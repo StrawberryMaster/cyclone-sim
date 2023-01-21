@@ -578,7 +578,7 @@ class Storm {
             let namedTime;
             let depNum;
             let designations;
-            if (loadData.format >= Format.WITH_INDEXEDDB) {
+            if (loadData.format >= saveFormat.WITH_INDEXEDDB) {
                 let obj = loadData.value;
                 this.record = StormData.loadArr(basin, loadData.sub(obj.record));
                 for (let p of [
@@ -597,7 +597,7 @@ class Storm {
                 if (obj.designations !== undefined) designations = obj.designations;
                 if (obj.sbData) {
                     this.sbData = obj.sbData;
-                    if (loadData.format < Format.WITH_SCALES) {     // convert from pre-v0.2 values
+                    if (loadData.format < saveFormat.WITH_SCALES) {     // convert from pre-v0.2 values
                         for (let sub in this.sbData) {
                             let l = this.sbData[sub].classLog;
                             if (l) {
@@ -646,7 +646,7 @@ class Storm {
                 if (!inBasinTrop && this.enterTime && !this.exitTime) this.exitTime = t;
                 let clsn = Scale.extendedSaffirSimpson.get(d);  // hardcoded to extended Saffir-Simpson since this is only used for backwards-compatibility
                 if (inBasinTrop && !namedTime && clsn >= 1) namedTime = t;  // backwards-compatibility name conversion
-                if (loadData.format < Format.WITH_STORM_SUBBASIN_DATA && inBasinTrop) {
+                if (loadData.format < saveFormat.WITH_STORM_SUBBASIN_DATA && inBasinTrop) {
                     for (let subId of basin.forSubBasinChain(sub)) {
                         for (let j = 0; j <= clsn; j++) this.subBasinData(subId, yr, j, true);
                     }
@@ -758,7 +758,7 @@ class StormRef {
 
     load(data) {
         if (data instanceof LoadData) {
-            if (data.format >= Format.WITH_INDEXEDDB) {
+            if (data.format >= saveFormat.WITH_INDEXEDDB) {
                 for (let p of ['refId', 'season', 'lastApplicableAt']) this[p] = data.value[p];
             } else {
                 let str = data.value;
@@ -801,9 +801,9 @@ class StormData {
 
     load(data, posInArr) {
         if (data instanceof LoadData) {
-            if (data.format >= Format.WITH_INDEXEDDB) {
+            if (data.format >= saveFormat.WITH_INDEXEDDB) {
                 let obj = data.value;
-                if (data.format >= Format.WITH_LONG_LAT)
+                if (data.format >= saveFormat.WITH_LONG_LAT)
                     this.pos = Coordinate.convertToXY(this.basin.mapType, obj.pos.longitude, obj.pos.latitude);
                 else
                     this.pos = createVector(obj.pos.x, obj.pos.y);
@@ -851,11 +851,11 @@ class StormData {
 
     static loadArr(basin, data) {
         if (basin instanceof Basin && data instanceof LoadData) {
-            if (data.format >= Format.WITH_INDEXEDDB) {
+            if (data.format >= saveFormat.WITH_INDEXEDDB) {
                 let obj = data.value;
                 let arr = [];
                 let x, y;
-                if (data.format >= Format.WITH_LONG_LAT) {
+                if (data.format >= saveFormat.WITH_LONG_LAT) {
                     let longitude = [...obj.pos.longitude];
                     let latitude = [...obj.pos.latitude];
                     x = [];
@@ -1307,7 +1307,7 @@ class ActiveSystem extends StormData {
         if (data instanceof LoadData) {
             let activeAttribs = ACTIVE_ATTRIBS[this.basin.actMode] || ACTIVE_ATTRIBS.defaults;
             let algorithmVersion = 0;
-            if (data.format >= Format.WITH_INDEXEDDB) {
+            if (data.format >= saveFormat.WITH_INDEXEDDB) {
                 let obj = data.value;
                 super.load(data);
                 algorithmVersion = obj.algorithmVersion || 0;

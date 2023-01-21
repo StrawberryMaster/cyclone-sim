@@ -211,7 +211,7 @@ function upgradeLegacySaves() {
                             if (s[2] === '') y = -parseInt(s[3]);
                             else y = parseInt(s[2]);
                             const obj = {};
-                            obj.format = Format.WITH_SAVED_SEASONS;
+                            obj.format = saveFormat.WITH_SAVED_SEASONS;
                             obj.saveName = name;
                             obj.season = y;
                             obj.value = localStorage.getItem(k);

@@ -236,7 +236,7 @@ const DB_KEY_SETTINGS = "settings";
 const LOADED_SEASON_EXPIRATION = 150000;    // minimum duration in miliseconds after a season was last accessed before it unloads (2.5 minutes)
 
 // Save format versions
-const Format = Object.freeze({
+const saveFormat = Object.freeze({
     WITH_SAVED_SEASONS: 1,
     WITH_INDEXEDDB: 2,
     WITH_IMPROVED_ENV: 3,

@@ -580,7 +580,7 @@ class Basin {
                     let oldSeqNameIndex;
                     let oldHypoCats;
                     let oldHurricaneStrengthTerm;
-                    if (data.format >= Format.WITH_INDEXEDDB) {
+                    if (data.format >= saveFormat.WITH_INDEXEDDB) {
                         let obj = data.value;
                         let flags = obj.flags;
                         this.SHem = flags & 1;
@@ -658,12 +658,12 @@ class Basin {
                                 activeSystemData = activeSystemData.split(",");
                                 while (activeSystemData.length > 0) this.activeSystems.push(new ActiveSystem(this, data.sub(activeSystemData.pop())));
                             }
-                            if (format < Format.WITH_SAVED_SEASONS) this.lastSaved = this.tick = 0; // resets tick to 0 in basins test-saved in versions prior to full saving including seasons added
+                            if (format < saveFormat.WITH_SAVED_SEASONS) this.lastSaved = this.tick = 0; // resets tick to 0 in basins test-saved in versions prior to full saving including seasons added
                         }
                     }
                     if (MAP_TYPES[this.mapType].form === 'earth') {
                         this.mainSubBasin = MAP_TYPES[this.mapType].mainSubBasin;
-                        if (data.format < Format.WITH_EARTH_SUBBASINS) {
+                        if (data.format < saveFormat.WITH_EARTH_SUBBASINS) {
                             let loadedSubBasins = this.subBasins;
                             this.subBasins = {};
                             this.defineEarthSubBasins();
@@ -687,7 +687,7 @@ class Basin {
                         if (sb instanceof SubBasin)
                             sb.setDesignationSystem(desSys);
                     }
-                    if (data.format < Format.WITH_SCALES) {
+                    if (data.format < saveFormat.WITH_SCALES) {
                         if (!this.subBasins[this.mainSubBasin])
                             this.addSubBasin(this.mainSubBasin);
                         let sb = this.subBasins[this.mainSubBasin];
@@ -881,14 +881,14 @@ class Season {
         let basin = this.basin;
         if (data instanceof LoadData && data.format >= EARLIEST_COMPATIBLE_FORMAT && data.format <= SAVE_FORMAT) {
             let oldStats = {};
-            if (data.format >= Format.WITH_INDEXEDDB) {
+            if (data.format >= saveFormat.WITH_INDEXEDDB) {
                 let obj = data.value;
                 // for(let p of [
                 //     'totalSystemCount',
                 //     'envRecordStarts'
                 // ]) this[p] = obj[p] || 0;
                 this.totalSystemCount = obj.totalSystemCount || 0;
-                if (data.format < Format.WITH_SUBBASIN_SEASON_STATS) {
+                if (data.format < saveFormat.WITH_SUBBASIN_SEASON_STATS) {
                     for (let p of [
                         'depressions',
                         'namedStorms',
@@ -904,7 +904,7 @@ class Season {
                     ]) oldStats[p] = obj[p];
                 }
                 if (obj.stats) {
-                    if (data.format >= Format.WITH_EARTH_SUBBASINS || MAP_TYPES[basin.mapType].form !== 'earth') {
+                    if (data.format >= saveFormat.WITH_EARTH_SUBBASINS || MAP_TYPES[basin.mapType].form !== 'earth') {
                         for (let sub in obj.stats)
                             this.subBasinStats[sub] = new SeasonStats(basin, sub, data.sub(obj.stats[sub]));
                     } else {
@@ -1014,7 +1014,7 @@ class Season {
                     }
                 }
             }
-            if (data.format < Format.WITH_SUBBASIN_SEASON_STATS) {
+            if (data.format < saveFormat.WITH_SUBBASIN_SEASON_STATS) {
                 let s = this.stats(this.basin.mainSubBasin);
                 for (let p of [
                     'ACE',
@@ -1158,7 +1158,7 @@ class SeasonStats {
                 ]) this[p] = d[p];
                 if (d.cCounters) {
                     for (let i in d.cCounters) {
-                        if (data.format >= Format.WITH_SCALES) this.classificationCounters[i] = d.cCounters[i];
+                        if (data.format >= saveFormat.WITH_SCALES) this.classificationCounters[i] = d.cCounters[i];
                         else {   // convert pre-v0.2 values
                             this.classificationCounters[Scale.convertOldValue(+i)] = d.cCounters[i];
                             if (i === '5') this.classificationCounters['6'] = d.cCounters[i];

@@ -379,7 +379,7 @@ class DesignationSystem {
                 let a = Namg.auxiliaryLists[i];
                 if (a.length === 1 && a[0] === "Unnamed") Namg.auxiliaryLists.splice(i, 1);
             }
-            if (data.format < Format.WITH_SCALES) { // convert thresholds from pre-v0.2 values
+            if (data.format < saveFormat.WITH_SCALES) { // convert thresholds from pre-v0.2 values
                 Numg.threshold = Scale.convertOldValue(Numg.threshold);
                 Namg.threshold = Scale.convertOldValue(Namg.threshold);
             }
