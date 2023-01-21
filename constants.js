@@ -182,7 +182,7 @@ const MAP_TYPES = [     // Land generation controls for different map types
 const EARTH_MAP_PATH = 'resources/earth.png';
 
 // Storm types
-const StormTypes = Object({
+const StormTypes = Object.freeze({
     EXTROP: 0,
     SUBTROP: 1,
     TROP: 2,
@@ -198,7 +198,7 @@ const KEY_REPEAT_COOLDOWN = 15;
 const KEY_REPEATER = 5;
 
 // Designation modes
-const DesigCrossmode = Object({
+const DesigCrossmode = Object.freeze({
     ALWAYS: 0,
     STRICT_ALWAYS: 1,
     REGEN: 2,
@@ -236,7 +236,7 @@ const DB_KEY_SETTINGS = "settings";
 const LOADED_SEASON_EXPIRATION = 150000;    // minimum duration in miliseconds after a season was last accessed before it unloads (2.5 minutes)
 
 // Save format versions
-const Format = Object({
+const Format = Object.freeze({
     WITH_SAVED_SEASONS: 1,
     WITH_INDEXEDDB: 2,
     WITH_IMPROVED_ENV: 3,
