@@ -33,10 +33,10 @@ class Basin {
             );
         }
         // if(MAP_TYPES[this.mapType].special==='CPac'){
-        //     this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.naming.crossingMode = DESIG_CROSSMODE_KEEP;
-        //     this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.crossingMode = DESIG_CROSSMODE_KEEP;
+        //     this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.naming.crossingMode = DesigCrossmode.KEEP;
+        //     this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.crossingMode = DesigCrossmode.KEEP;
         //     this.addSubBasin(128,undefined,'Central Pacific',DEFAULT_MAIN_SUBBASIN,undefined,
-        //         DesignationSystem.centralPacific.clone().setCrossingModes(DESIG_CROSSMODE_KEEP,DESIG_CROSSMODE_KEEP)
+        //         DesignationSystem.centralPacific.clone().setCrossingModes(DesigCrossmode.KEEP,DesigCrossmode.KEEP)
         //     );
         // }else if(MAP_TYPES[this.mapType].special==='PAGASA'){
         //     this.addSubBasin(128,undefined,'PAGASA AoR',DEFAULT_MAIN_SUBBASIN,undefined,
@@ -49,23 +49,23 @@ class Basin {
         //     this.addSubBasin(128,undefined,'Arabian Sea',DEFAULT_MAIN_SUBBASIN,undefined,
         //         new DesignationSystem({
         //             prefix: 'ARB',
-        //             numCross: DESIG_CROSSMODE_KEEP
+        //             numCross: DesigCrossmode.KEEP
         //         })
         //     );
         //     this.addSubBasin(129,undefined,'Bay of Bengal',DEFAULT_MAIN_SUBBASIN,undefined,
         //         new DesignationSystem({
         //             prefix: 'BOB',
-        //             numCross: DESIG_CROSSMODE_KEEP
+        //             numCross: DesigCrossmode.KEEP
         //         })
         //     );
         // }else if(MAP_TYPES[this.mapType].special==='AUS'){
-        //     this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.naming.crossingMode = DESIG_CROSSMODE_KEEP;
-        //     this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.crossingMode = DESIG_CROSSMODE_KEEP;
+        //     this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.naming.crossingMode = DesigCrossmode.KEEP;
+        //     this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.crossingMode = DesigCrossmode.KEEP;
         //     this.addSubBasin(128,undefined,'Jakarta TCWC',DEFAULT_MAIN_SUBBASIN,undefined,
-        //         DesignationSystem.australianRegionJakarta.clone().setCrossingModes(undefined,DESIG_CROSSMODE_KEEP)
+        //         DesignationSystem.australianRegionJakarta.clone().setCrossingModes(undefined,DesigCrossmode.KEEP)
         //     );
         //     this.addSubBasin(129,undefined,'Port Moresby TCWC',DEFAULT_MAIN_SUBBASIN,undefined,
-        //         DesignationSystem.australianRegionPortMoresby.clone().setCrossingModes(undefined,DESIG_CROSSMODE_KEEP)
+        //         DesignationSystem.australianRegionPortMoresby.clone().setCrossingModes(undefined,DesigCrossmode.KEEP)
         //     );
         // }
         this.seed = opts.seed || DateTime.now().toMillis();
@@ -374,7 +374,7 @@ class Basin {
                             return seas;
                         } else return undefined;
                     });
-                }, 'Retrieving Season...');
+                }, 'Retrieving season...');
             }
         }
         if (season) season.lastAccessed = DateTime.now().toMillis();
@@ -411,21 +411,21 @@ class Basin {
         this.addSubBasin(ids.shem, undefined, 'Southern Hemisphere', ids.world);
         this.addSubBasin(ids.atl, undefined, 'Atlantic', ids.nhem,
             Scale.saffirSimpson.clone(),
-            DesignationSystem.atlantic.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            DesignationSystem.atlantic.clone().setCrossingModes(undefined, DesigCrossmode.KEEP)
         );
         this.addSubBasin(ids.atlland, undefined, 'Atl Land (technical)', ids.atl);
         this.addSubBasin(ids.epac, undefined, 'Eastern Pacific', ids.nhem,
             Scale.saffirSimpson.clone(),
-            DesignationSystem.easternPacific.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            DesignationSystem.easternPacific.clone().setCrossingModes(undefined, DesigCrossmode.KEEP)
         );
         this.addSubBasin(ids.epacland, undefined, 'EPac Land (technical)', ids.epac);
         this.addSubBasin(ids.cpac, undefined, 'Central Pacific', ids.epac,
             undefined,
-            DesignationSystem.centralPacific.clone().setCrossingModes(DESIG_CROSSMODE_KEEP, DESIG_CROSSMODE_KEEP)
+            DesignationSystem.centralPacific.clone().setCrossingModes(DesigCrossmode.KEEP, DesigCrossmode.KEEP)
         );
         this.addSubBasin(ids.wpac, undefined, 'Western Pacific', ids.nhem,
             Scale.JMA.clone(),
-            DesignationSystem.westernPacific.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            DesignationSystem.westernPacific.clone().setCrossingModes(undefined, DesigCrossmode.KEEP)
         );
         this.addSubBasin(ids.pagasa, undefined, 'PAGASA AoR', ids.wpac,
             undefined,
@@ -433,56 +433,56 @@ class Basin {
         );
         this.addSubBasin(ids.nio, undefined, 'North Indian Ocean', ids.nhem,
             Scale.IMD.clone(),
-            DesignationSystem.northIndianOcean.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            DesignationSystem.northIndianOcean.clone().setCrossingModes(undefined, DesigCrossmode.KEEP)
         );
         this.addSubBasin(ids.bob, undefined, 'Bay of Bengal', ids.nio,
             undefined,
             new DesignationSystem({
                 prefix: 'BOB ',
-                numCross: DESIG_CROSSMODE_KEEP
+                numCross: DesigCrossmode.KEEP
             })
         );
         this.addSubBasin(ids.arb, undefined, 'Arabian Sea', ids.nio,
             undefined,
             new DesignationSystem({
                 prefix: 'ARB ',
-                numCross: DESIG_CROSSMODE_KEEP
+                numCross: DesigCrossmode.KEEP
             })
         );
         this.addSubBasin(ids.nioland, undefined, 'LAND (NIO)', ids.nio,
             undefined,
             new DesignationSystem({
                 prefix: 'LAND ',
-                numCross: DESIG_CROSSMODE_KEEP
+                numCross: DesigCrossmode.KEEP
             })
         );
         this.addSubBasin(ids.medi, undefined, 'Mediterranean Sea', ids.nhem,
             undefined,
-            DesignationSystem.mediterranean.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            DesignationSystem.mediterranean.clone().setCrossingModes(undefined, DesigCrossmode.KEEP)
         );
         this.addSubBasin(ids.aus, undefined, 'Australian Region', ids.shem,
             Scale.australian.clone(),
-            DesignationSystem.australianRegionBoM.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            DesignationSystem.australianRegionBoM.clone().setCrossingModes(undefined, DesigCrossmode.KEEP)
         );
         this.addSubBasin(ids.jakarta, undefined, 'TCWC Jakarta AoR', ids.aus,
             undefined,
-            DesignationSystem.australianRegionJakarta.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            DesignationSystem.australianRegionJakarta.clone().setCrossingModes(undefined, DesigCrossmode.KEEP)
         );
         this.addSubBasin(ids.pm, undefined, 'TCWC Port Moresby AoR', ids.aus,
             undefined,
-            DesignationSystem.australianRegionPortMoresby.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            DesignationSystem.australianRegionPortMoresby.clone().setCrossingModes(undefined, DesigCrossmode.KEEP)
         );
         this.addSubBasin(ids.swio, undefined, 'South-West Indian Ocean', ids.shem,
             Scale.southwestIndianOcean.clone(),
-            DesignationSystem.southWestIndianOcean.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            DesignationSystem.southWestIndianOcean.clone().setCrossingModes(undefined, DesigCrossmode.KEEP)
         );
         this.addSubBasin(ids.spac, undefined, 'South Pacific', ids.shem,
             Scale.australian.clone(),
-            DesignationSystem.southPacific.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            DesignationSystem.southPacific.clone().setCrossingModes(undefined, DesigCrossmode.KEEP)
         );
         this.addSubBasin(ids.satl, undefined, 'South Atlantic', ids.shem,
             undefined,
-            DesignationSystem.southAtlantic.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            DesignationSystem.southAtlantic.clone().setCrossingModes(undefined, DesigCrossmode.KEEP)
         );
     }
 
@@ -580,7 +580,7 @@ class Basin {
                     let oldSeqNameIndex;
                     let oldHypoCats;
                     let oldHurricaneStrengthTerm;
-                    if (data.format >= FORMAT_WITH_INDEXEDDB) {
+                    if (data.format >= Format.WITH_INDEXEDDB) {
                         let obj = data.value;
                         let flags = obj.flags;
                         this.SHem = flags & 1;
@@ -658,12 +658,12 @@ class Basin {
                                 activeSystemData = activeSystemData.split(",");
                                 while (activeSystemData.length > 0) this.activeSystems.push(new ActiveSystem(this, data.sub(activeSystemData.pop())));
                             }
-                            if (format < FORMAT_WITH_SAVED_SEASONS) this.lastSaved = this.tick = 0; // resets tick to 0 in basins test-saved in versions prior to full saving including seasons added
+                            if (format < Format.WITH_SAVED_SEASONS) this.lastSaved = this.tick = 0; // resets tick to 0 in basins test-saved in versions prior to full saving including seasons added
                         }
                     }
                     if (MAP_TYPES[this.mapType].form === 'earth') {
                         this.mainSubBasin = MAP_TYPES[this.mapType].mainSubBasin;
-                        if (data.format < FORMAT_WITH_EARTH_SUBBASINS) {
+                        if (data.format < Format.WITH_EARTH_SUBBASINS) {
                             let loadedSubBasins = this.subBasins;
                             this.subBasins = {};
                             this.defineEarthSubBasins();
@@ -687,7 +687,7 @@ class Basin {
                         if (sb instanceof SubBasin)
                             sb.setDesignationSystem(desSys);
                     }
-                    if (data.format < FORMAT_WITH_SCALES) {
+                    if (data.format < Format.WITH_SCALES) {
                         if (!this.subBasins[this.mainSubBasin])
                             this.addSubBasin(this.mainSubBasin);
                         let sb = this.subBasins[this.mainSubBasin];
@@ -731,7 +731,7 @@ class Basin {
                     return Promise.all(arr);
                 });
             }).then(() => this);
-        }, 'Loading Basin...').catch(e => {
+        }, 'Loading basin...').catch(e => {
             console.error(e);
         });
     }
@@ -881,14 +881,14 @@ class Season {
         let basin = this.basin;
         if (data instanceof LoadData && data.format >= EARLIEST_COMPATIBLE_FORMAT && data.format <= SAVE_FORMAT) {
             let oldStats = {};
-            if (data.format >= FORMAT_WITH_INDEXEDDB) {
+            if (data.format >= Format.WITH_INDEXEDDB) {
                 let obj = data.value;
                 // for(let p of [
                 //     'totalSystemCount',
                 //     'envRecordStarts'
                 // ]) this[p] = obj[p] || 0;
                 this.totalSystemCount = obj.totalSystemCount || 0;
-                if (data.format < FORMAT_WITH_SUBBASIN_SEASON_STATS) {
+                if (data.format < Format.WITH_SUBBASIN_SEASON_STATS) {
                     for (let p of [
                         'depressions',
                         'namedStorms',
@@ -904,7 +904,7 @@ class Season {
                     ]) oldStats[p] = obj[p];
                 }
                 if (obj.stats) {
-                    if (data.format >= FORMAT_WITH_EARTH_SUBBASINS || MAP_TYPES[basin.mapType].form !== 'earth') {
+                    if (data.format >= Format.WITH_EARTH_SUBBASINS || MAP_TYPES[basin.mapType].form !== 'earth') {
                         for (let sub in obj.stats)
                             this.subBasinStats[sub] = new SeasonStats(basin, sub, data.sub(obj.stats[sub]));
                     } else {
@@ -1014,7 +1014,7 @@ class Season {
                     }
                 }
             }
-            if (data.format < FORMAT_WITH_SUBBASIN_SEASON_STATS) {
+            if (data.format < Format.WITH_SUBBASIN_SEASON_STATS) {
                 let s = this.stats(this.basin.mainSubBasin);
                 for (let p of [
                     'ACE',
@@ -1158,7 +1158,7 @@ class SeasonStats {
                 ]) this[p] = d[p];
                 if (d.cCounters) {
                     for (let i in d.cCounters) {
-                        if (data.format >= FORMAT_WITH_SCALES) this.classificationCounters[i] = d.cCounters[i];
+                        if (data.format >= Format.WITH_SCALES) this.classificationCounters[i] = d.cCounters[i];
                         else {   // convert pre-v0.2 values
                             this.classificationCounters[Scale.convertOldValue(+i)] = d.cCounters[i];
                             if (i === '5') this.classificationCounters['6'] = d.cCounters[i];

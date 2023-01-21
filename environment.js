@@ -123,7 +123,7 @@ class EnvNoiseChannel extends NoiseChannel {
         if (data instanceof LoadData) {
             let wx;
             let wy;
-            if (data.format >= FORMAT_WITH_INDEXEDDB) {
+            if (data.format >= Format.WITH_INDEXEDDB) {
                 let obj = data.value;
                 for (let p of ['xOff', 'yOff', 'zOff']) if (obj[p]) this[p] = obj[p];
                 wx = obj.wobbleVector && obj.wobbleVector.x;
@@ -454,7 +454,7 @@ class Environment {  // Environmental fields that determine storm strength and s
     }
 
     init(data) {
-        if (data instanceof LoadData && data.format < FORMAT_WITH_IMPROVED_ENV) {   // Hardcoded conversion of data structure to Format 3 (doesn't affect values, thus old format number should cascade)
+        if (data instanceof LoadData && data.format < Format.WITH_IMPROVED_ENV) {   // Hardcoded conversion of data structure to Format 3 (doesn't affect values, thus old format number should cascade)
             let newData = {};
             let v = data.value;
             let o = (...d) => {

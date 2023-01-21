@@ -175,8 +175,8 @@ class Storm {
         let str = '';
         if (!name) str += 'Unnamed ';
         switch (ty) {
-            case TROP:
-            case SUBTROP:
+            case StormTypes.TROP:
+            case StormTypes.SUBTROP:
                 str += clsnNom;
                 if (name) str += ' ' + name;
                 break;
@@ -189,7 +189,7 @@ class Storm {
                     else str += 'Tropical Wave';
                 }
                 break;
-            case EXTROP:
+            case StormTypes.EXTROP:
                 if (hasbeenTC) {
                     str += 'Post-Tropical Cyclone';
                     if (name) str += ' ' + name;
@@ -241,7 +241,7 @@ class Storm {
             if (selectedStorm === this) {
                 stormIcons.noFill();
                 stormIcons.stroke(255);
-                if (ty === EXTROP) {
+                if (ty === StormTypes.EXTROP) {
                     stormIcons.textSize(18);
                     stormIcons.text("L", 0, 0);
                 } else stormIcons.ellipse(0, 0, DIAMETER);
@@ -249,9 +249,9 @@ class Storm {
             }
             stormIcons.fill(scaleIconData.color);
             stormIcons.noStroke();
-            if (ty !== EXTROP) stormIcons.ellipse(0, 0, DIAMETER);
+            if (ty !== StormTypes.EXTROP) stormIcons.ellipse(0, 0, DIAMETER);
             drawArms();
-            if (ty === EXTROP) {
+            if (ty === StormTypes.EXTROP) {
                 stormIcons.fill(COLORS.storm.extL);
                 stormIcons.textSize(18);
             } else {
@@ -428,11 +428,11 @@ class Storm {
                 let findold = false;
                 let keep = false;
                 switch (ds.crossingMode) {
-                    case DESIG_CROSSMODE_ALWAYS:
+                    case DesigCrossmode.ALWAYS:
                         findold = true;
                         break;
-                    case DESIG_CROSSMODE_REGEN:
-                    case DESIG_CROSSMODE_STRICT_REGEN:
+                    case DesigCrossmode.REGEN:
+                    case DesigCrossmode.STRICT_REGEN:
                     // let a = data;
                     // for(let i=this.record.length-1;i>=0;i--){
                     //     if(tropOrSub(this.record[i].type)) a = this.record[i];
@@ -443,9 +443,9 @@ class Storm {
                     // if(isNaming) lastFormedSB = lastFormedSB.naming;
                     // else lastFormedSB = lastFormedSB.numbering;
                     // if(lastFormedSB!==subId) keep = true;
-                    // else if(ds.crossingMode===DESIG_CROSSMODE_REGEN) findold = true;
+                    // else if(ds.crossingMode===DesigCrossmode.REGEN) findold = true;
                     // break;
-                    case DESIG_CROSSMODE_KEEP:
+                    case DesigCrossmode.KEEP:
                         keep = true;
                         break;
                 }
@@ -578,7 +578,7 @@ class Storm {
             let namedTime;
             let depNum;
             let designations;
-            if (loadData.format >= FORMAT_WITH_INDEXEDDB) {
+            if (loadData.format >= Format.WITH_INDEXEDDB) {
                 let obj = loadData.value;
                 this.record = StormData.loadArr(basin, loadData.sub(obj.record));
                 for (let p of [
@@ -597,7 +597,7 @@ class Storm {
                 if (obj.designations !== undefined) designations = obj.designations;
                 if (obj.sbData) {
                     this.sbData = obj.sbData;
-                    if (loadData.format < FORMAT_WITH_SCALES) {     // convert from pre-v0.2 values
+                    if (loadData.format < Format.WITH_SCALES) {     // convert from pre-v0.2 values
                         for (let sub in this.sbData) {
                             let l = this.sbData[sub].classLog;
                             if (l) {
@@ -646,7 +646,7 @@ class Storm {
                 if (!inBasinTrop && this.enterTime && !this.exitTime) this.exitTime = t;
                 let clsn = Scale.extendedSaffirSimpson.get(d);  // hardcoded to extended Saffir-Simpson since this is only used for backwards-compatibility
                 if (inBasinTrop && !namedTime && clsn >= 1) namedTime = t;  // backwards-compatibility name conversion
-                if (loadData.format < FORMAT_WITH_STORM_SUBBASIN_DATA && inBasinTrop) {
+                if (loadData.format < Format.WITH_STORM_SUBBASIN_DATA && inBasinTrop) {
                     for (let subId of basin.forSubBasinChain(sub)) {
                         for (let j = 0; j <= clsn; j++) this.subBasinData(subId, yr, j, true);
                     }
@@ -758,7 +758,7 @@ class StormRef {
 
     load(data) {
         if (data instanceof LoadData) {
-            if (data.format >= FORMAT_WITH_INDEXEDDB) {
+            if (data.format >= Format.WITH_INDEXEDDB) {
                 for (let p of ['refId', 'season', 'lastApplicableAt']) this[p] = data.value[p];
             } else {
                 let str = data.value;
@@ -783,7 +783,7 @@ class StormData {
             this.pos = createVector(x, y);
             this.pressure = p;
             this.windSpeed = w;
-            this.type = t < STORM_TYPES ? t : EXTROP;
+            this.type = t < StormTypes.STORM_TYPES ? t : StormTypes.EXTROP;
         }
     }
 
@@ -801,9 +801,9 @@ class StormData {
 
     load(data, posInArr) {
         if (data instanceof LoadData) {
-            if (data.format >= FORMAT_WITH_INDEXEDDB) {
+            if (data.format >= Format.WITH_INDEXEDDB) {
                 let obj = data.value;
-                if (data.format >= FORMAT_WITH_LONG_LAT)
+                if (data.format >= Format.WITH_LONG_LAT)
                     this.pos = Coordinate.convertToXY(this.basin.mapType, obj.pos.longitude, obj.pos.latitude);
                 else
                     this.pos = createVector(obj.pos.x, obj.pos.y);
@@ -851,11 +851,11 @@ class StormData {
 
     static loadArr(basin, data) {
         if (basin instanceof Basin && data instanceof LoadData) {
-            if (data.format >= FORMAT_WITH_INDEXEDDB) {
+            if (data.format >= Format.WITH_INDEXEDDB) {
                 let obj = data.value;
                 let arr = [];
                 let x, y;
-                if (data.format >= FORMAT_WITH_LONG_LAT) {
+                if (data.format >= Format.WITH_LONG_LAT) {
                     let longitude = [...obj.pos.longitude];
                     let latitude = [...obj.pos.latitude];
                     x = [];
@@ -964,9 +964,9 @@ class ActiveSystem extends StormData {
         //         sType==='10' ? 400 :
         //         sType==='y' ? 440 : 35 :
         //     random(15,35);
-        //     let ty = ext ? EXTROP : spawn ?
+        //     let ty = ext ? StormTypes.EXTROP : spawn ?
         //         sType==="l" ? TROPWAVE :
-        //         subt ? SUBTROP : TROP :
+        //         subt ? StormTypes.SUBTROP : StormTypes.TROP :
         //     TROPWAVE;
         //     super(basin,x,y,p,w,ty);
         //     this.organization = ext ? 0 : spawn ? sType==="l" ? 0.2 : 1 : random(0,0.3);
@@ -1015,7 +1015,7 @@ class ActiveSystem extends StormData {
             }
             this.pressure = d.pressure === undefined ? 1000 : d.pressure;
             this.windSpeed = d.windSpeed === undefined ? 30 : d.windSpeed;
-            this.type = d.type === undefined ? EXTROP : d.type;
+            this.type = d.type === undefined ? StormTypes.EXTROP : d.type;
             let activeAttribs = ACTIVE_ATTRIBS[basin.actMode] || ACTIVE_ATTRIBS.defaults;
             for (let v of activeAttribs)
                 this[v] = d[v] || 0;
@@ -1109,17 +1109,17 @@ class ActiveSystem extends StormData {
         // this.depth = lerp(this.depth,targetDepth,0.05);
 
         // switch(this.type){
-        //     case TROP:
-        //         this.type = this.lowerWarmCore<0.55 ? EXTROP : ((this.organization<0.4 && this.windSpeed<50) || this.windSpeed<20) ? this.upperWarmCore<0.56 ? EXTROP : TROPWAVE : this.upperWarmCore<0.56 ? SUBTROP : TROP;
+        //     case StormTypes.TROP:
+        //         this.type = this.lowerWarmCore<0.55 ? StormTypes.EXTROP : ((this.organization<0.4 && this.windSpeed<50) || this.windSpeed<20) ? this.upperWarmCore<0.56 ? StormTypes.EXTROP : TROPWAVE : this.upperWarmCore<0.56 ? StormTypes.SUBTROP : StormTypes.TROP;
         //         break;
-        //     case SUBTROP:
-        //         this.type = this.lowerWarmCore<0.55 ? EXTROP : ((this.organization<0.4 && this.windSpeed<50) || this.windSpeed<20) ? this.upperWarmCore<0.57 ? EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? SUBTROP : TROP;
+        //     case StormTypes.SUBTROP:
+        //         this.type = this.lowerWarmCore<0.55 ? StormTypes.EXTROP : ((this.organization<0.4 && this.windSpeed<50) || this.windSpeed<20) ? this.upperWarmCore<0.57 ? StormTypes.EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? StormTypes.SUBTROP : StormTypes.TROP;
         //         break;
         //     case TROPWAVE:
-        //         this.type = this.lowerWarmCore<0.55 ? EXTROP : (this.organization<0.45 || this.windSpeed<25) ? this.upperWarmCore<0.56 ? EXTROP : TROPWAVE : this.upperWarmCore<0.56 ? SUBTROP : TROP;
+        //         this.type = this.lowerWarmCore<0.55 ? StormTypes.EXTROP : (this.organization<0.45 || this.windSpeed<25) ? this.upperWarmCore<0.56 ? StormTypes.EXTROP : TROPWAVE : this.upperWarmCore<0.56 ? StormTypes.SUBTROP : StormTypes.TROP;
         //         break;
         //     default:
-        //         this.type = this.lowerWarmCore<0.6 ? EXTROP : (this.organization<0.45 || this.windSpeed<25) ? this.upperWarmCore<0.57 ? EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? SUBTROP : TROP;
+        //         this.type = this.lowerWarmCore<0.6 ? StormTypes.EXTROP : (this.organization<0.45 || this.windSpeed<25) ? this.upperWarmCore<0.57 ? StormTypes.EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? StormTypes.SUBTROP : StormTypes.TROP;
         // }
 
         if (this.kill || this.pos.x >= WIDTH || this.pos.x < 0 || this.pos.y >= HEIGHT || this.pos.y < 0) {
@@ -1307,7 +1307,7 @@ class ActiveSystem extends StormData {
         if (data instanceof LoadData) {
             let activeAttribs = ACTIVE_ATTRIBS[this.basin.actMode] || ACTIVE_ATTRIBS.defaults;
             let algorithmVersion = 0;
-            if (data.format >= FORMAT_WITH_INDEXEDDB) {
+            if (data.format >= Format.WITH_INDEXEDDB) {
                 let obj = data.value;
                 super.load(data);
                 algorithmVersion = obj.algorithmVersion || 0;
@@ -1344,5 +1344,5 @@ class ActiveSystem extends StormData {
 }
 
 function tropOrSub(ty) {
-    return ty === TROP || ty === SUBTROP;
+    return ty === StormTypes.TROP || ty === StormTypes.SUBTROP;
 }
