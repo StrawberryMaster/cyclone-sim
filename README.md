@@ -1,5 +1,13 @@
 # cyclone-sim
-A fork of [Monsoonjr99](https://monsoonjr99.github.io)'s [cyclone-sim](https://moonsoonjr99.github.io/cyclone-sim/), a p5.js tropical cyclone simulation game, intended to be more efficient in terms of code and performance. Formerly known as Mona Spoon's Gerrymandered World. This is a work in progress, and is not yet finished. If you want to contribute, see the [contributing](#can-i-contribute) section.
+![GitHub issues](https://img.shields.io/github/issues/strawberrymaster/cyclone-sim)
+![GitHub last commit](https://img.shields.io/github/last-commit/strawberrymaster/cyclone-sim)
+![GitHub repo size](https://img.shields.io/github/repo-size/strawberrymaster/cyclone-sim)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/strawberrymaster/cyclone-sim)
+![P5.js](https://img.shields.io/badge/p5.js-v1.3.1-ED225D)
+![Luxon.js](https://img.shields.io/badge/luxon.js-v1.27.0-ED225D)
+
+
+A fork of [Monsoonjr99](https://monsoonjr99.github.io)'s [cyclone-sim](https://monsoonjr99.github.io/cyclone-sim/), a p5.js tropical cyclone simulation game, intended to be more efficient in terms of code and performance. Formerly known as Mona Spoon's Gerrymandered World. This is a work in progress, and is not yet finished. If you want to contribute, see the [contributing](#can-i-contribute) section.
 
 ## How can I play this?
 You can play the game [here](https://strawberrymaster.github.io/cyclone-sim/). Alternatively, download the files, extract them to a folder and open index.html in your browser.
