@@ -180,7 +180,7 @@ class Storm {
                 str += clsnNom;
                 if (name) str += ' ' + name;
                 break;
-            case TROPWAVE:
+            case StormTypes.TROPWAVE:
                 if (hasbeenTC) {
                     if (name) str += 'Remnants of ' + name;
                     else str += 'Remnant Low';
@@ -965,9 +965,9 @@ class ActiveSystem extends StormData {
         //         sType==='y' ? 440 : 35 :
         //     random(15,35);
         //     let ty = ext ? StormTypes.EXTROP : spawn ?
-        //         sType==="l" ? TROPWAVE :
+        //         sType==="l" ? StormTypes.TROPWAVE :
         //         subt ? StormTypes.SUBTROP : StormTypes.TROP :
-        //     TROPWAVE;
+        //     StormTypes.TROPWAVE;
         //     super(basin,x,y,p,w,ty);
         //     this.organization = ext ? 0 : spawn ? sType==="l" ? 0.2 : 1 : random(0,0.3);
         //     this.lowerWarmCore = ext ? 0 : subt ? 0.6 : 1;
@@ -1115,7 +1115,7 @@ class ActiveSystem extends StormData {
         //     case StormTypes.SUBTROP:
         //         this.type = this.lowerWarmCore<0.55 ? StormTypes.EXTROP : ((this.organization<0.4 && this.windSpeed<50) || this.windSpeed<20) ? this.upperWarmCore<0.57 ? StormTypes.EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? StormTypes.SUBTROP : StormTypes.TROP;
         //         break;
-        //     case TROPWAVE:
+        //     case StormTypes.TROPWAVE:
         //         this.type = this.lowerWarmCore<0.55 ? StormTypes.EXTROP : (this.organization<0.45 || this.windSpeed<25) ? this.upperWarmCore<0.56 ? StormTypes.EXTROP : TROPWAVE : this.upperWarmCore<0.56 ? StormTypes.SUBTROP : StormTypes.TROP;
         //         break;
         //     default:
