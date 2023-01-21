@@ -418,6 +418,11 @@ UI.init = function () {
 
     // main menu
 
+    let startItems = ["Infinite possibilities, infinite fun!", "Simulate your own monster storms!",
+    "A storm simulator for the modern age!", "No more waiting for the next hurricane season!",
+    "Storms! Storms! Storms!", "It works on my machine!", "Clouds and stuff!"];
+    let itemIndex = Math.floor(Math.random()*startItems.length)
+
     mainMenu.append(false, WIDTH / 2, HEIGHT / 4, 0, 0, function (s) {  // title text
         fill(COLORS.UI.text);
         noStroke();
@@ -426,7 +431,7 @@ UI.init = function () {
         text(TITLE, 0, 0);
         textSize(18);
         textStyle(ITALIC);
-        text("Simulate your own monster storms!", 0, 40);
+        text(startItems[itemIndex], 0, 40);
     });
 
     mainMenu.append(false, WIDTH / 2 - 100, HEIGHT / 2 - 20, 200, 40, function (s) {    // "New Basin" button
