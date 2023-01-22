@@ -59,49 +59,54 @@ class Scale {
         }
     }
 
-    getColor(stormData) {
-        const { type } = stormData;
-        if (type === EXTROP) return COLORS.storm[EXTROP];
-        if (type === TROPWAVE) return COLORS.storm[TROPWAVE];
-        const subtropical = type === SUBTROP;
-        let c = this.get(stormData);
-        if (this.classifications.length < 1) return "white";
-        while (!this.classifications[c].color && c > 0) {
-            c--;
+    getColor() {
+        let c;
+        let subtropical;
+        if (arguments[0] instanceof StormData) {
+            if (arguments[0].type === EXTROP) return COLORS.storm[EXTROP];
+            if (arguments[0].type === TROPWAVE) return COLORS.storm[TROPWAVE];
+            c = this.get(arguments[0]);
+            subtropical = arguments[0].type === SUBTROP;
+        } else {
+            c = arguments[0];
+            subtropical = arguments[1];
         }
-        const clsn = this.classifications[c];
-        return subtropical && clsn.subtropicalColor
-            ? clsn.subtropicalColor
-            : clsn.color instanceof Array
-                ? clsn.color[this.colorSchemeValue]
-                : clsn.color;
+        if (this.classifications.length < 1) return 'white';
+        while (!this.classifications[c].color && c > 0) c--;
+        let clsn = this.classifications[c];
+        let color;
+        if (subtropical && clsn.subtropicalColor) color = clsn.subtropicalColor;
+        else color = clsn.color;
+        if (color instanceof Array) return color[this.colorSchemeValue];
+        return color;
     }
 
-    getIcon(stormData) {
-        const { type } = stormData;
-        const subtropical = type === SUBTROP;
-        const color = this.getColor(stormData);
-        let c = this.get(stormData);
-        if (this.classifications.length < 1) {
-            return { symbol: subtropical ? "SC" : "C", arms: 2, color: "white" };
+    getIcon() {
+        let c;
+        let subtropical;
+        let color;
+        if (arguments[0] instanceof StormData) {
+            c = this.get(arguments[0]);
+            subtropical = arguments[0].type === SUBTROP;
+            color = this.getColor(arguments[0]);
+        } else {
+            c = arguments[0];
+            subtropical = arguments[1];
+            color = this.getColor(c, subtropical);
         }
-        while (!this.classifications[c].symbol && c > 0) {
-            c--;
-        }
-        const clsn = this.classifications[c];
+        if (this.classifications.length < 1) return { symbol: subtropical ? 'SC' : 'C', arms: 2, color: 'white' };
+        while (!this.classifications[c].symbol && c > 0) c--;
+        let clsn = this.classifications[c];
         let symbol;
-        const fetch = (sym) => {
-            if (sym instanceof Array) {
-                return sym[this.flavorValue];
-            }
+        let fetch = sym => {
+            if (sym instanceof Array) return sym[this.flavorValue];
             return sym;
         };
         if (subtropical) {
-            symbol = clsn.subtropicalSymbol ? fetch(clsn.subtropicalSymbol) : `S${fetch(clsn.symbol)}`;
-        } else {
-            symbol = fetch(clsn.symbol);
-        }
-        const arms = clsn.arms;
+            if (clsn.subtropicalSymbol) symbol = fetch(clsn.subtropicalSymbol);
+            else symbol = 'S' + fetch(clsn.symbol);
+        } else symbol = fetch(clsn.symbol);
+        let arms = clsn.arms;
         return { symbol, arms, color };
     }
 

@@ -374,7 +374,7 @@ class Basin {
                             return seas;
                         } else return undefined;
                     });
-                }, 'Retrieving Season...');
+                }, 'Retrieving season...');
             }
         }
         if (season) season.lastAccessed = DateTime.now().toMillis();
@@ -826,12 +826,8 @@ class Season {
     }
 
     get_season_year() {
-        // bad hacky way at getting the season year
-        for (let y in this.basin.seasons) {
-            if (this.basin.seasons[y] === this)
-                return +y;
-        }
-    }
+        return +Object.keys(this.basin.seasons).find(y => this.basin.seasons[y] === this);
+    }   
 
     save(forceStormRefs) {
         let basin = this.basin;

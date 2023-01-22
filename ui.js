@@ -2083,25 +2083,25 @@ UI.init = function () {
     }, true, false);
 
     sideMenu.append(false, 5, 30, sideMenu.width - 10, 25, function (s) { // Save and return to main menu button
-        s.button("Save and Return to Main Menu", false, 15);
+        s.button("Save and return to main menu", false, 15);
     }, function () {
         if (UI.viewBasin.saveName === AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke(true);
         else {
             returntomainmenu(UI.viewBasin.save());
         }
     }).append(false, 0, 30, sideMenu.width - 10, 25, function (s) {   // Return to main menu w/o saving button
-        s.button("Return to Main Menu w/o Saving", false, 15);
+        s.button("Return to main menu w/o saving", false, 15);
     }, function () {
         areYouSure.dialog(returntomainmenu);
     }).append(false, 0, 30, sideMenu.width - 10, 25, function (s) {   // Save basin button
-        let txt = "Save Basin";
+        let txt = "Save basin";
         if (UI.viewBasin.tick === UI.viewBasin.lastSaved) txt += " [Saved]";
         s.button(txt, false, 15);
     }, function () {
         if (UI.viewBasin.saveName === AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke();
         else UI.viewBasin.save();
     }).append(false, 0, 30, sideMenu.width - 10, 25, function (s) {   // Save basin as button
-        s.button("Save Basin As...", false, 15);
+        s.button("Save basin as...", false, 15);
     }, function () {
         saveBasinAsPanel.invoke();
     }).append(false, 0, 30, sideMenu.width - 10, 25, function (s) {   // Settings menu button
@@ -2111,14 +2111,14 @@ UI.init = function () {
         settingsMenu.show();
         paused = true;
     }).append(false, 0, 30, sideMenu.width - 10, 25, function (s) {   // Designation system editor menu button
-        s.button("Edit Designations", false, 15);
+        s.button("Edit designations", false, 15);
     }, function () {
         desig_editor_definition.refresh();
         primaryWrapper.hide();
         desigSystemEditor.show();
         paused = true;
     }).append(false, 0, 30, sideMenu.width - 10, 25, function (s) {  // Basin seed button
-        s.button('Basin Seed', false, 15);
+        s.button('Basin seed', false, 15);
     }, function () {
         seedBox.toggleShow();
         if (seedBox.showing) seedBox.clicked();
@@ -2307,44 +2307,21 @@ function changeViewTick(t) {
 
 function wrapText(str, w) {
     let newStr = "";
-    for (let i = 0, j = 0; i < str.length; i = j) {
-        if (str.charAt(i) === '\n') {
-            i++;
-            j++;
-            newStr += '\n';
-            continue;
+    let lines = str.split("\n");
+    for (let line of lines) {
+        let words = line.split(" ");
+        let currLine = "";
+        for (let word of words) {
+            if (textWidth(currLine + " " + word) > w) {
+                newStr += currLine + "\n";
+                currLine = word;
+            } else {
+                currLine += " " + word;
+            }
         }
-        j = str.indexOf('\n', i);
-        if (j === -1) j = str.length;
-        let line = str.slice(i, j);
-        while (textWidth(line) > w) {
-            let k = 0;
-            while (textWidth(line.slice(0, k)) <= w) k++;
-            k--;
-            if (k < 1) {
-                newStr += line.charAt(0) + '\n';
-                line = line.slice(1);
-                continue;
-            }
-            let l = line.lastIndexOf(' ', k - 1);
-            if (l !== -1) {
-                newStr += line.slice(0, l) + '\n';
-                line = line.slice(l + 1);
-                continue;
-            }
-            let sub = line.slice(0, k);
-            l = sub.search(/\W(?=\w*$)/);
-            if (l !== -1) {
-                newStr += line.slice(0, l + 1) + '\n';
-                line = line.slice(l + 1);
-                continue;
-            }
-            newStr += sub + '\n';
-            line = line.slice(k);
-        }
-        newStr += line;
+        newStr += currLine + "\n";
     }
-    return newStr;
+    return newStr.slice(0, newStr.length - 1);
 }
 
 function countTextLines(str) {
