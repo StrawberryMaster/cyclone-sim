@@ -186,7 +186,7 @@ function draw() {
     } catch (err) {            // BSOD
         resetMatrix();
         colorMode(RGB);
-        background(170, 175, 173);
+        background(20, 0, 178);
         fill(255);
         textSize(24);
         textAlign(LEFT, TOP);

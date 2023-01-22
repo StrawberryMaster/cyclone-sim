@@ -48,7 +48,7 @@ SPAWN_RULES.defaults.archetypes = {
         y: (b) => b.hemY(random(HEIGHT * 0.7, HEIGHT * 0.9)),
         pressure: [1000, 1020],
         windSpeed: [15, 35],
-        type: StormTypes.TROPWAVE,
+        type: TROPWAVE,
         organization: [0, 0.3],
         lowerWarmCore: 1,
         upperWarmCore: 1,
@@ -59,7 +59,7 @@ SPAWN_RULES.defaults.archetypes = {
         y: (b, x) => b.hemY(b.env.get("jetstream", x, 0, b.tick) + random(-75, 75)),
         pressure: [1000, 1020],
         windSpeed: [15, 35],
-        type: StormTypes.EXTROP,
+        type: EXTROP,
         organization: 0,
         lowerWarmCore: 0,
         upperWarmCore: 0,
@@ -79,7 +79,7 @@ SPAWN_RULES.defaults.archetypes = {
     'tc': {
         pressure: 1005,
         windSpeed: 25,
-        type: StormTypes.TROP,
+        type: TROP,
         organization: 1,
         lowerWarmCore: 1,
         upperWarmCore: 1,
@@ -87,7 +87,7 @@ SPAWN_RULES.defaults.archetypes = {
     },
     'stc': {
         inherit: 'tc',
-        type: StormTypes.SUBTROP,
+        type: SUBTROP,
         lowerWarmCore: 0.6,
         upperWarmCore: 0.5
     },
@@ -192,7 +192,7 @@ SPAWN_RULES[SIM_MODE_WILD].archetypes = {
         y: (b) => b.hemY(random(HEIGHT * 0.2, HEIGHT * 0.9)),
         pressure: [1000, 1020],
         windSpeed: [15, 35],
-        type: StormTypes.TROPWAVE,
+        type: TROPWAVE,
         organization: [0, 0.3],
         lowerWarmCore: 1,
         upperWarmCore: 1,
@@ -221,7 +221,7 @@ SPAWN_RULES[SIM_MODE_EXPERIMENTAL].archetypes = {
         y: (b) => b.hemY(random(HEIGHT * 0.7, HEIGHT * 0.9)),
         pressure: [1000, 1020],
         windSpeed: [15, 35],
-        type: StormTypes.TROPWAVE,
+        type: TROPWAVE,
         organization: [0, 0.3],
         lowerWarmCore: 1,
         upperWarmCore: 1,
@@ -233,7 +233,7 @@ SPAWN_RULES[SIM_MODE_EXPERIMENTAL].archetypes = {
         y: (b, x) => b.hemY(b.env.get("jetstream", x, 0, b.tick) + random(-75, 75)),
         pressure: [1000, 1020],
         windSpeed: [15, 35],
-        type: StormTypes.EXTROP,
+        type: EXTROP,
         organization: 0,
         lowerWarmCore: 0,
         upperWarmCore: 0,
@@ -243,7 +243,7 @@ SPAWN_RULES[SIM_MODE_EXPERIMENTAL].archetypes = {
     'tc': {
         pressure: 1005,
         windSpeed: 25,
-        type: StormTypes.TROP,
+        type: TROP,
         organization: 1,
         lowerWarmCore: 1,
         upperWarmCore: 1,
@@ -1045,17 +1045,17 @@ STORM_ALGORITHM[SIM_MODE_EXPERIMENTAL].core = function (sys, u) {
 
 STORM_ALGORITHM.defaults.typeDetermination = function (sys, u) {
     switch (sys.type) {
-        case StormTypes.TROP:
-            sys.type = sys.lowerWarmCore < 0.55 ? StormTypes.EXTROP : ((sys.organization < 0.4 && sys.windSpeed < 50) || sys.windSpeed < 20) ? sys.upperWarmCore < 0.56 ? StormTypes.EXTROP : StormTypes.TROPWAVE : sys.upperWarmCore < 0.56 ? StormTypes.SUBTROP : StormTypes.TROP;
+        case TROP:
+            sys.type = sys.lowerWarmCore < 0.55 ? EXTROP : ((sys.organization < 0.4 && sys.windSpeed < 50) || sys.windSpeed < 20) ? sys.upperWarmCore < 0.56 ? EXTROP : TROPWAVE : sys.upperWarmCore < 0.56 ? SUBTROP : TROP;
             break;
-        case StormTypes.SUBTROP:
-            sys.type = sys.lowerWarmCore < 0.55 ? StormTypes.EXTROP : ((sys.organization < 0.4 && sys.windSpeed < 50) || sys.windSpeed < 20) ? sys.upperWarmCore < 0.57 ? StormTypes.EXTROP : StormTypes.TROPWAVE : sys.upperWarmCore < 0.57 ? StormTypes.SUBTROP : StormTypes.TROP;
+        case SUBTROP:
+            sys.type = sys.lowerWarmCore < 0.55 ? EXTROP : ((sys.organization < 0.4 && sys.windSpeed < 50) || sys.windSpeed < 20) ? sys.upperWarmCore < 0.57 ? EXTROP : TROPWAVE : sys.upperWarmCore < 0.57 ? SUBTROP : TROP;
             break;
-        case StormTypes.TROPWAVE:
-            sys.type = sys.lowerWarmCore < 0.55 ? StormTypes.EXTROP : (sys.organization < 0.45 || sys.windSpeed < 25) ? sys.upperWarmCore < 0.56 ? StormTypes.EXTROP : StormTypes.TROPWAVE : sys.upperWarmCore < 0.56 ? StormTypes.SUBTROP : StormTypes.TROP;
+        case TROPWAVE:
+            sys.type = sys.lowerWarmCore < 0.55 ? EXTROP : (sys.organization < 0.45 || sys.windSpeed < 25) ? sys.upperWarmCore < 0.56 ? EXTROP : TROPWAVE : sys.upperWarmCore < 0.56 ? SUBTROP : TROP;
             break;
         default:
-            sys.type = sys.lowerWarmCore < 0.6 ? StormTypes.EXTROP : (sys.organization < 0.45 || sys.windSpeed < 25) ? sys.upperWarmCore < 0.57 ? StormTypes.EXTROP : StormTypes.TROPWAVE : sys.upperWarmCore < 0.57 ? StormTypes.SUBTROP : StormTypes.TROP;
+            sys.type = sys.lowerWarmCore < 0.6 ? EXTROP : (sys.organization < 0.45 || sys.windSpeed < 25) ? sys.upperWarmCore < 0.57 ? EXTROP : TROPWAVE : sys.upperWarmCore < 0.57 ? SUBTROP : TROP;
     }
 };
 

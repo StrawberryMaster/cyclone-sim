@@ -419,9 +419,9 @@ UI.init = function () {
     // main menu
 
     let startItems = ["Infinite possibilities, infinite fun!", "Simulate your own monster storms!",
-        "A storm simulator for the modern age!", "No more waiting for the next hurricane season!",
-        "Storms! Storms! Storms!", "It works on my machine!", "Clouds and stuff!"];
-    let itemIndex = Math.floor(Math.random() * startItems.length)
+    "A storm simulator for the modern age!", "No more waiting for the next hurricane season!",
+    "Storms! Storms! Storms!", "It works on my machine!", "Clouds and stuff!"];
+    let itemIndex = Math.floor(Math.random()*startItems.length)
 
     mainMenu.append(false, WIDTH / 2, HEIGHT / 4, 0, 0, function (s) {  // title text
         fill(COLORS.UI.text);
@@ -435,12 +435,12 @@ UI.init = function () {
     });
 
     mainMenu.append(false, WIDTH / 2 - 100, HEIGHT / 2 - 20, 200, 40, function (s) {    // "New Basin" button
-        s.button('New basin', true, 24);
+        s.button('New Basin', true, 24);
     }, function () {
         mainMenu.hide();
         basinCreationMenu.show();
     }).append(false, 0, 60, 200, 40, function (s) {     // load button
-        s.button('Load basin', true, 24);
+        s.button('Load Basin', true, 24);
     }, function () {
         mainMenu.hide();
         loadMenu.show();
@@ -459,7 +459,7 @@ UI.init = function () {
         noStroke();
         textAlign(CENTER, CENTER);
         textSize(36);
-        text("New basin settings", 0, 0);
+        text("New Basin Settings", 0, 0);
     });
 
     let basinCreationMenuButtonSpacing = 36;
@@ -1829,10 +1829,10 @@ UI.init = function () {
                                     part.segments.push(aSegment);
                                     aSegment.startTick = rt;
                                     aSegment.maxCat = clsn;
-                                    aSegment.fullyTrop = (d.type === StormTypes.TROP);
+                                    aSegment.fullyTrop = (d.type === TROP);
                                 }
                                 if (clsn > aSegment.maxCat) aSegment.maxCat = clsn;
-                                aSegment.fullyTrop = aSegment.fullyTrop || (d.type === StormTypes.TROP);
+                                aSegment.fullyTrop = aSegment.fullyTrop || (d.type === TROP);
                                 aSegment.endTick = rt;
                             } else if (aSegment) aSegment = undefined;
                         }
@@ -2083,25 +2083,25 @@ UI.init = function () {
     }, true, false);
 
     sideMenu.append(false, 5, 30, sideMenu.width - 10, 25, function (s) { // Save and return to main menu button
-        s.button("Save and return to main menu", false, 15);
+        s.button("Save and Return to Main Menu", false, 15);
     }, function () {
         if (UI.viewBasin.saveName === AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke(true);
         else {
             returntomainmenu(UI.viewBasin.save());
         }
     }).append(false, 0, 30, sideMenu.width - 10, 25, function (s) {   // Return to main menu w/o saving button
-        s.button("Return to main menu w/o saving", false, 15);
+        s.button("Return to Main Menu w/o Saving", false, 15);
     }, function () {
         areYouSure.dialog(returntomainmenu);
     }).append(false, 0, 30, sideMenu.width - 10, 25, function (s) {   // Save basin button
-        let txt = "Save basin";
+        let txt = "Save Basin";
         if (UI.viewBasin.tick === UI.viewBasin.lastSaved) txt += " [Saved]";
         s.button(txt, false, 15);
     }, function () {
         if (UI.viewBasin.saveName === AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke();
         else UI.viewBasin.save();
     }).append(false, 0, 30, sideMenu.width - 10, 25, function (s) {   // Save basin as button
-        s.button("Save basin As...", false, 15);
+        s.button("Save Basin As...", false, 15);
     }, function () {
         saveBasinAsPanel.invoke();
     }).append(false, 0, 30, sideMenu.width - 10, 25, function (s) {   // Settings menu button
@@ -2111,14 +2111,14 @@ UI.init = function () {
         settingsMenu.show();
         paused = true;
     }).append(false, 0, 30, sideMenu.width - 10, 25, function (s) {   // Designation system editor menu button
-        s.button("Edit designations", false, 15);
+        s.button("Edit Designations", false, 15);
     }, function () {
         desig_editor_definition.refresh();
         primaryWrapper.hide();
         desigSystemEditor.show();
         paused = true;
     }).append(false, 0, 30, sideMenu.width - 10, 25, function (s) {  // Basin seed button
-        s.button('Basin seed', false, 15);
+        s.button('Basin Seed', false, 15);
     }, function () {
         seedBox.toggleShow();
         if (seedBox.showing) seedBox.clicked();
@@ -2131,7 +2131,7 @@ UI.init = function () {
         fill(COLORS.UI.text);
         textAlign(CENTER, TOP);
         textSize(18);
-        text("Save basin as...", this.width / 2, 10);
+        text("Save Basin As...", this.width / 2, 10);
         stroke(0);
         line(0, 0, 0, this.height);
     }, true, false);

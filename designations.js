@@ -129,7 +129,7 @@ class DesignationSystem {
         // 2 = redesignate regenerating systmes (keep designations of systems that retain TC status through the crossing; use previous designation if applicable)
         // 3 = strictly redesignate regenerating systems (always use new designation for regenerating systems even if previous one exists)
         // 4 = never redesignate (keep designations regardless of retaining TC status)
-        this.numbering.crossingMode = opts.numCross === undefined ?  DesigCrossmode.ALWAYS: opts.numCross;
+        this.numbering.crossingMode = opts.numCross === undefined ? DESIG_CROSSMODE_ALWAYS : opts.numCross;
         this.naming = {};
         // main name lists to be used
         this.naming.mainLists = [];
@@ -149,7 +149,7 @@ class DesignationSystem {
         // scale category threshold for naming a system (overrides Scale.namingThreshold)
         this.naming.threshold = opts.nameThresh;
         // behavior for primary designations of basin-crossing systems (see above)
-        this.naming.crossingMode = opts.nameCross === undefined ? DesigCrossmode.STRICT_REGEN : opts.nameCross;
+        this.naming.crossingMode = opts.nameCross === undefined ? DESIG_CROSSMODE_STRICT_REGEN : opts.nameCross;
         if (data instanceof LoadData) this.load(data);
     }
 
@@ -374,12 +374,12 @@ class DesignationSystem {
                 'continuousNameIndex',
                 'threshold'
             ]) Namg[p] = namg[p];
-            Namg.crossingMode = namg.crossingMode === undefined ? DesigCrossmode.STRICT_REGEN : namg.crossingMode;
+            Namg.crossingMode = namg.crossingMode === undefined ? DESIG_CROSSMODE_STRICT_REGEN : namg.crossingMode;
             for (let i = Namg.auxiliaryLists.length - 1; i >= 0; i--) {
                 let a = Namg.auxiliaryLists[i];
                 if (a.length === 1 && a[0] === "Unnamed") Namg.auxiliaryLists.splice(i, 1);
             }
-            if (data.format < saveFormat.WITH_SCALES) { // convert thresholds from pre-v0.2 values
+            if (data.format < FORMAT_WITH_SCALES) { // convert thresholds from pre-v0.2 values
                 Numg.threshold = Scale.convertOldValue(Numg.threshold);
                 Namg.threshold = Scale.convertOldValue(Namg.threshold);
             }

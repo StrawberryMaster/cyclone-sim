@@ -61,9 +61,9 @@ class Scale {
 
     getColor(stormData) {
         const { type } = stormData;
-        if (type === StormTypes.EXTROP) return COLORS.storm[StormTypes.EXTROP];
-        if (type === StormTypes.TROPWAVE) return COLORS.storm[StormTypes.TROPWAVE];
-        const subtropical = type === StormTypes.SUBTROP;
+        if (type === EXTROP) return COLORS.storm[EXTROP];
+        if (type === TROPWAVE) return COLORS.storm[TROPWAVE];
+        const subtropical = type === SUBTROP;
         let c = this.get(stormData);
         if (this.classifications.length < 1) return "white";
         while (!this.classifications[c].color && c > 0) {
@@ -79,7 +79,7 @@ class Scale {
 
     getIcon(stormData) {
         const { type } = stormData;
-        const subtropical = type === StormTypes.SUBTROP;
+        const subtropical = type === SUBTROP;
         const color = this.getColor(stormData);
         let c = this.get(stormData);
         if (this.classifications.length < 1) {
@@ -110,7 +110,7 @@ class Scale {
         let subtropical;
         if (arguments[0] instanceof StormData) {
             c = this.get(arguments[0]);
-            subtropical = arguments[0].type === StormTypes.SUBTROP;
+            subtropical = arguments[0].type === SUBTROP;
         } else {
             c = arguments[0];
             subtropical = arguments[1];

@@ -13,8 +13,8 @@ const TICK_DURATION = 3600000;  // How long in sim time does a tick last in mill
 const ADVISORY_TICKS = 6;    // Number of ticks per advisory
 const YEAR_LENGTH = 365.2425 * 24;        // The length of a year in ticks; used for seasonal activity
 const STEP = 30;            // Number of milliseconds in real time a simulation step lasts at default speed
-const NHEM_DEFAULT_YEAR = luxon.DateTime.utc().year;
-const SHEM_DEFAULT_YEAR = luxon.DateTime.utc().month < 6 ? NHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR + 1;
+const NHEM_DEFAULT_YEAR = moment.utc().year();
+const SHEM_DEFAULT_YEAR = moment.utc().month() < 6 ? NHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR + 1;
 const DEPRESSION_LETTER = "H";
 const WINDSPEED_ROUNDING = 5;
 // const MAP_DEFINITION = 2;   // normal scaler for the land map
@@ -180,32 +180,16 @@ const MAP_TYPES = [     // Land generation controls for different map types
     }
 ];
 const EARTH_MAP_PATH = 'resources/earth.png';
-
-// Storm types
-const StormTypes = Object.freeze({
-    EXTROP: 0,
-    SUBTROP: 1,
-    TROP: 2,
-    TROPWAVE: 3,
-    STORM_TYPES: 4
-});
-
-// Keyboard shortcuts (ASCII codes)
-const KEY_LEFT_BRACKET = 91;
-const KEY_RIGHT_BRACKET = 93;
+const EXTROP = 0;
+const SUBTROP = 1;
+const TROP = 2;
+const TROPWAVE = 3;
+const STORM_TYPES = 4;
+const KEY_LEFT_BRACKET = 219;
+const KEY_RIGHT_BRACKET = 221;
 const KEY_F11 = 122;
 const KEY_REPEAT_COOLDOWN = 15;
 const KEY_REPEATER = 5;
-
-// Designation modes
-const DesigCrossmode = Object.freeze({
-    ALWAYS: 0,
-    STRICT_ALWAYS: 1,
-    REGEN: 2,
-    STRICT_REGEN: 3,
-    KEEP: 4
-});
-
 const MAX_SNOW_LAYERS = 50;
 const SNOW_SEASON_OFFSET = 5 / 6;
 const ENV_LAYER_TILE_SIZE = 20;
@@ -218,7 +202,11 @@ const LOADED_SEASON_REQUIRED_ERROR = "loaded-season-required";
 const LOAD_MENU_BUTTONS_PER_PAGE = 6;
 const DEFAULT_MAIN_SUBBASIN = 0;
 const DEFAULT_OUTBASIN_SUBBASIN = 255;
-
+const DESIG_CROSSMODE_ALWAYS = 0;
+const DESIG_CROSSMODE_STRICT_ALWAYS = 1;
+const DESIG_CROSSMODE_REGEN = 2;
+const DESIG_CROSSMODE_STRICT_REGEN = 3;
+const DESIG_CROSSMODE_KEEP = 4;
 const SCALE_MEASURE_ONE_MIN_KNOTS = 0;
 const SCALE_MEASURE_TEN_MIN_KNOTS = 1;
 const SCALE_MEASURE_MILLIBARS = 2;
@@ -231,21 +219,18 @@ const MIN_SPEED = -5;
 const MAX_SPEED = 5;
 
 // Saving/loading-related constants
+
 const AUTOSAVE_SAVE_NAME = "Autosave";
 const DB_KEY_SETTINGS = "settings";
 const LOADED_SEASON_EXPIRATION = 150000;    // minimum duration in miliseconds after a season was last accessed before it unloads (2.5 minutes)
-
-// Save format versions
-const saveFormat = Object.freeze({
-    WITH_SAVED_SEASONS: 1,
-    WITH_INDEXEDDB: 2,
-    WITH_IMPROVED_ENV: 3,
-    WITH_SUBBASIN_SEASON_STATS: 4,
-    WITH_STORM_SUBBASIN_DATA: 5,
-    WITH_SCALES: 6,
-    WITH_EARTH_SUBBASINS: 7,
-    WITH_LONG_LAT: 8
-});
+const FORMAT_WITH_SAVED_SEASONS = 1;
+const FORMAT_WITH_INDEXEDDB = 2;
+const FORMAT_WITH_IMPROVED_ENV = 3;
+const FORMAT_WITH_SUBBASIN_SEASON_STATS = 4;
+const FORMAT_WITH_STORM_SUBBASIN_DATA = 5;
+const FORMAT_WITH_SCALES = 6;
+const FORMAT_WITH_EARTH_SUBBASINS = 7;
+const FORMAT_WITH_LONG_LAT = 7;
 
 // Legacy saving/loading-related constants (backwards-compatibility)
 
@@ -288,8 +273,8 @@ const COLORS = {};      // For storing all colors used in the graphics
 function defineColors() {    // Since p5 color() function doesn't work until setup(), this is called in setup()
     COLORS.bg = color(10, 55, 155);
     COLORS.storm = {};
-    COLORS.storm[StormTypes.EXTROP] = color(220, 220, 220);
-    COLORS.storm[StormTypes.TROPWAVE] = color(130, 130, 240);
+    COLORS.storm[EXTROP] = color(220, 220, 220);
+    COLORS.storm[TROPWAVE] = color(130, 130, 240);
     COLORS.storm.extL = "red";
     COLORS.land = [];
     COLORS.land.push([0.85, color(190, 190, 190)]);
