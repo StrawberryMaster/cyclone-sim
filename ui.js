@@ -552,7 +552,6 @@ UI.init = function () {
         newBasinSettings.scale++;
         newBasinSettings.scale %= Scale.presetScales.length;
         newBasinSettings.scaleFlavor = 0;
-        newBasinSettings.scaleColorScheme = 0;
     }).append(false, 0, basinCreationMenuButtonSpacing, basinCreationMenuButtonWidths, basinCreationMenuButtonHeights, function (s) {     // Scale flavor selector
         let scale = newBasinSettings.scale || 0;
         scale = Scale.presetScales[scale];
@@ -567,20 +566,6 @@ UI.init = function () {
         if (newBasinSettings.scaleFlavor === undefined) newBasinSettings.scaleFlavor = 0;
         newBasinSettings.scaleFlavor++;
         newBasinSettings.scaleFlavor %= scale.flavorDisplayNames.length;
-    }).append(false, 0, basinCreationMenuButtonSpacing, basinCreationMenuButtonWidths, basinCreationMenuButtonHeights, function (s) {     // Scale color scheme selector
-        let scale = newBasinSettings.scale || 0;
-        scale = Scale.presetScales[scale];
-        let scheme = newBasinSettings.scaleColorScheme || 0;
-        let grey = scale.colorSchemeDisplayNames.length < 2;
-        s.button('Scale Color Scheme: ' + (scale.colorSchemeDisplayNames[scheme] || 'N/A'), true, 18, grey);
-    }, function () {
-        yearselbox.enterFunc();
-        let scale = newBasinSettings.scale || 0;
-        scale = Scale.presetScales[scale];
-        if (scale.colorSchemeDisplayNames.length < 2) return;
-        if (newBasinSettings.scaleColorScheme === undefined) newBasinSettings.scaleColorScheme = 0;
-        newBasinSettings.scaleColorScheme++;
-        newBasinSettings.scaleColorScheme %= scale.colorSchemeDisplayNames.length;
     }).append(false, 0, basinCreationMenuButtonSpacing, basinCreationMenuButtonWidths, basinCreationMenuButtonHeights, function (s) {     // Designations selector
         let ds = newBasinSettings.designations || 0;
         ds = DesignationSystem.presetDesignationSystems[ds].displayName;
@@ -634,8 +619,7 @@ UI.init = function () {
             'mapType',
             'godMode',
             'scale',
-            'scaleFlavor',
-            'scaleColorScheme'
+            'scaleFlavor'
         ]) opts[o] = newBasinSettings[o];
         let basin = new Basin(false, opts);
         newBasinSettings = {};
@@ -786,7 +770,7 @@ UI.init = function () {
         text("Settings", 0, 0);
     });
 
-    settingsMenu.append(false, WIDTH / 2 - 150, HEIGHT / 4, 300, 30, function (s) {   // storm intensity indicator
+    settingsMenu.append(false, WIDTH / 2 - 150, 3 * HEIGHT / 16, 300, 30, function (s) {   // storm intensity indicator
         let b = simSettings.showStrength ? "Enabled" : "Disabled";
         s.button("Intensity Indicator: " + b, true);
     }, function () {
@@ -828,6 +812,17 @@ UI.init = function () {
             // landBuffer.clear();
             land.drawn = false;
         }
+    }).append(false, 0, 37, 300, 30, function (s) {     // speed unit
+        let u = ['kts', 'mph', 'km/h'][simSettings.speedUnit];
+        s.button("Windspeed Unit: " + u, true);
+    }, function () {
+        simSettings.setSpeedUnit("incmod", 3);
+    }).append(false, 0, 37, 300, 30, function (s) {     // color scheme
+        let n = COLOR_SCHEMES[simSettings.colorScheme].name;
+        s.button("Color Scheme: " + n, true);
+    }, function () {
+        simSettings.setColorScheme("incmod", COLOR_SCHEMES.length);
+        refreshTracks(true);
     });
 
     settingsMenu.append(false, WIDTH / 2 - 150, 7 * HEIGHT / 8 - 20, 300, 30, function (s) { // "Back" button
@@ -1419,11 +1414,10 @@ UI.init = function () {
             let sName = selectedStorm.getFullNameByTick(viewTick);
             let sData = selectedStorm.getStormDataByTick(viewTick);
             if (sData) {
-                let sKts = sData ? sData.windSpeed : 0;
-                let sMph = ktsToMph(sKts, WINDSPEED_ROUNDING);
-                let sKmh = ktsToKmh(sKts, WINDSPEED_ROUNDING);
+                let sWind = sData ? sData.windSpeed : 0;
+                sWind = displayWindspeed(sWind);
                 let sPrsr = sData ? sData.pressure : 1031;
-                txtStr = sName + ": " + sKts + " kts, " + sMph + " mph, " + sKmh + " km/h / " + sPrsr + " hPa";
+                txtStr = `${sName}: ${sWind} / ${sPrsr} hPa`;
             } else {
                 sName = selectedStorm.getFullNameByTick("peak");
                 txtStr = sName + " - ACE: " + selectedStorm.ACE;
@@ -1618,7 +1612,7 @@ UI.init = function () {
             else
                 info_row('Peak pressure', 'N/A');
             if (S.windPeak)
-                info_row('Peak wind speed', S.windPeak.windSpeed + ' kts');
+                info_row('Peak wind speed', displayWindspeed(S.windPeak.windSpeed));
             else
                 info_row('Peak wind speed', 'N/A');
             info_row('ACE', S.ACE);
@@ -1644,7 +1638,7 @@ UI.init = function () {
                 info_row('Landfalls', stats.landfalls);
                 if (stats.most_intense) {
                     let most_intense = stats.most_intense.fetch();
-                    info_row('Most Intense', most_intense.getNameByTick(-1) + '\n' + most_intense.peak.pressure + ' hPa\n' + most_intense.windPeak.windSpeed + ' kts');
+                    info_row('Most Intense', most_intense.getNameByTick(-1) + '\n' + most_intense.peak.pressure + ' hPa\n' + displayWindspeed(most_intense.windPeak.windSpeed));
                 } else
                     info_row('Most Intense', 'N/A');
             } else
@@ -1950,7 +1944,8 @@ UI.init = function () {
                     let y = map(i, 0, max_wind, bBound, tBound);
                     line(lBound - BOX_WIDTH * 0.008, y, lBound, y);
                     noStroke();
-                    text(i, lBound - BOX_WIDTH * 0.01, y);
+                    let unitLocalizedWind = [i, ktsToMph(i, WINDSPEED_ROUNDING), ktsToKmh(i, WINDSPEED_ROUNDING)][simSettings.speedUnit];
+                    text(unitLocalizedWind, lBound - BOX_WIDTH * 0.01, y);
                 }
                 for (let t0 = begin_tick, t1 = t0 + ADVISORY_TICKS; t1 <= end_tick; t0 = t1, t1 += ADVISORY_TICKS) {
                     let w0 = target.getStormDataByTick(t0).windSpeed;
@@ -2204,7 +2199,7 @@ function mouseClicked() {
 
 function selectStorm(s) {
     selectedStorm = s instanceof Storm ? s : undefined;
-    stormInfoPanel.target = selectedStorm;
+        stormInfoPanel.target = selectedStorm;
 }
 
 function keyPressed() {
@@ -2247,6 +2242,13 @@ function keyPressed() {
         case "m":
             simSettings.setShowMagGlass("toggle");
             if (UI.viewBasin) UI.viewBasin.env.updateMagGlass();
+            break;
+        case 'u':
+            simSettings.setSpeedUnit("incmod", 3);
+            break;
+        case 'c':
+            simSettings.setColorScheme("incmod", COLOR_SCHEMES.length);
+            refreshTracks(true);
             break;
         default:
             switch (keyCode) {
@@ -2318,8 +2320,8 @@ function wrapText(str, w) {
             } else {
                 currLine += " " + word;
             }
-        }
-        newStr += currLine + "\n";
+            }
+            newStr += currLine + "\n";
     }
     return newStr.slice(0, newStr.length - 1);
 }
@@ -2340,6 +2342,14 @@ function ktsToKmh(k, rnd) {
     let val = k * 1.852;
     if (rnd) val = round(val / rnd) * rnd;
     return val;
+}
+
+function displayWindspeed(kts, rnd) {
+    if (!rnd)
+        rnd = WINDSPEED_ROUNDING;
+    let value = [kts, ktsToMph(kts, rnd), ktsToKmh(kts, rnd)][simSettings.speedUnit];
+    let unitLabel = ['kts', 'mph', 'km/h'][simSettings.speedUnit];
+    return `${value} ${unitLabel}`;
 }
 
 function oneMinToTenMin(w, rnd) {

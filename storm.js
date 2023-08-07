@@ -263,7 +263,7 @@ class Storm {
             stormIcons.fill(0);
             if (simSettings.showStrength) {
                 stormIcons.textSize(10);
-                stormIcons.text(floor(st) + " / " + floor(pr), 0, DIAMETER);
+                stormIcons.text(`${displayWindspeed(floor(st), 1)}\n${floor(pr)} hPa`, 0, DIAMETER + 5);
             }
             if (name) {
                 stormIcons.textAlign(LEFT, CENTER);
@@ -305,10 +305,19 @@ class Storm {
             }
             if (selectedStorm === this && this.basin.viewingPresent() && this.current) {
                 forecastTracks.clear();
-                let p = this.current.trackForecast/* .points */;
-                for (let n = 0; n < p.length; n++) {
-                    forecastTracks.point(p[n].x, p[n].y);
-                }
+                let p = this.current.trackForecast;
+                const coneCircle = hour => {
+                    const n = hour / ADVISORY_TICKS - 1;
+                    forecastTracks.circle(p[n].x, p[n].y, hour * 0.7);
+                };
+                coneCircle(12);
+                coneCircle(24);
+                coneCircle(36);
+                coneCircle(48);
+                coneCircle(60);
+                coneCircle(72);
+                coneCircle(96);
+                coneCircle(120);
             }
         }
     }

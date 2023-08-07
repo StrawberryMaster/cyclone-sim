@@ -58,7 +58,7 @@ function setup() {
 
     // landWorker = new CSWorker();
 
-    let { fullW, fullH } = fullDimensions();
+let { fullW, fullH } = fullDimensions();
     buffers = new Map();
     scaler = 1;
 
@@ -73,13 +73,14 @@ function setup() {
     stormIcons = createBuffer();
     stormIcons.strokeWeight(3);
     forecastTracks = createBuffer();
-    forecastTracks.strokeWeight(3);
+    forecastTracks.strokeWeight(2);
     forecastTracks.stroke(240, 240, 0);
+    forecastTracks.noFill();
     landBuffer = createBufferImage(fullW, fullH);
     outBasinBuffer = createBufferImage(fullW, fullH);
     landShadows = createBufferImage(fullW, fullH);
     coastLine = createBufferImage(fullW, fullH);
-    envLayer = createBuffer(WIDTH, HEIGHT, false, true);
+        envLayer = createBuffer(WIDTH, HEIGHT, false, true);
     envLayer.colorMode(HSB);
     envLayer.strokeWeight(2);
     envLayer.noStroke();
@@ -90,7 +91,7 @@ function setup() {
     snow = [];
     for (let i = 0; i < MAX_SNOW_LAYERS; i++) {
         snow[i] = createBufferImage(fullW, fullH);
-    }
+            }
 
     simSpeed = 0; // The exponent for the simulation speed (0 is full-speed, 1 is half-speed, etc.)
     lastUpdateTimestamp = performance.now(); // Keeps track of how much time has passed since the last simulation step to control the simulation at varying speeds
@@ -215,38 +216,38 @@ class Settings {
                     v = decodeB36StringArray(v);
                     db.settings.put(v, DB_KEY_SETTINGS)
                         .catch(err => {
-                            console.error(err);
-                        })
+                        console.error(err);
+})
                         .then(() => {
                             localStorage.removeItem(lsKey);
-                        });
+                    });
                 } else {
                     v = [];
-                }
+            }
             }
             order.forEach((key, i) => {
                 this[key] = v.length > 0 ? v.pop() : defaults[i];
             });
             order.forEach(key => {
-                this[`set${key.charAt(0).toUpperCase()}${key.slice(1)}`] = (v, v2) => {
-                    this.set(key, v, v2);
-                };
+                    this[`set${key.charAt(0).toUpperCase()}${key.slice(1)}`] = (v, v2) => {
+                this.set(key, v, v2);
+            };
             });
         });
     }
 
     static order() {
-        return ["smoothLandColor", "showMagGlass", "snowLayers", "useShadows", "trackMode", "showStrength", "doAutosave"];    // add new settings to the beginning of this array
+        return ["colorScheme", "speedUnit", "smoothLandColor", "showMagGlass", "snowLayers", "useShadows", "trackMode", "showStrength", "doAutosave"];    // add new settings to the beginning of this array
     }
 
     static defaults() {
-        return [true, false, 2, false, 0, false, true];  // add new defaults to the beginning of this array
+        return [0, 0, true, false, 2, false, 0, false, true];  // add new defaults to the beginning of this array
     }
 
     save() {
         const order = Settings.order();
         let v = Object.keys(this).filter(key => order.has(key)).map(key => this[key]);
-        db.settings.put(v, DB_KEY_SETTINGS).catch(err => {
+                db.settings.put(v, DB_KEY_SETTINGS).catch(err => {
             console.error(err);
         });
     }
