@@ -419,9 +419,9 @@ UI.init = function () {
     // main menu
 
     let startItems = ["Infinite possibilities, infinite fun!", "Simulate your own monster storms!",
-    "A storm simulator for the modern age!", "No more waiting for the next hurricane season!",
-    "Storms! Storms! Storms!", "It works on my machine!", "Clouds and stuff!"];
-    let itemIndex = Math.floor(Math.random()*startItems.length)
+        "A storm simulator for the modern age!", "No more waiting for the next hurricane season!",
+        "Storms! Storms! Storms!", "It works on my machine!", "Clouds and stuff!"];
+    let itemIndex = Math.floor(Math.random() * startItems.length)
 
     mainMenu.append(false, WIDTH / 2, HEIGHT / 4, 0, 0, function (s) {  // title text
         fill(COLORS.UI.text);
@@ -2199,7 +2199,7 @@ function mouseClicked() {
 
 function selectStorm(s) {
     selectedStorm = s instanceof Storm ? s : undefined;
-        stormInfoPanel.target = selectedStorm;
+    stormInfoPanel.target = selectedStorm;
 }
 
 function keyPressed() {
@@ -2320,8 +2320,8 @@ function wrapText(str, w) {
             } else {
                 currLine += " " + word;
             }
-            }
-            newStr += currLine + "\n";
+        }
+        newStr += currLine + "\n";
     }
     return newStr.slice(0, newStr.length - 1);
 }
@@ -2342,14 +2342,6 @@ function ktsToKmh(k, rnd) {
     let val = k * 1.852;
     if (rnd) val = round(val / rnd) * rnd;
     return val;
-}
-
-function displayWindspeed(kts, rnd) {
-    if (!rnd)
-        rnd = WINDSPEED_ROUNDING;
-    let value = [kts, ktsToMph(kts, rnd), ktsToKmh(kts, rnd)][simSettings.speedUnit];
-    let unitLabel = ['kts', 'mph', 'km/h'][simSettings.speedUnit];
-    return `${value} ${unitLabel}`;
 }
 
 function oneMinToTenMin(w, rnd) {

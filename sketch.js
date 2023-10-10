@@ -58,7 +58,7 @@ function setup() {
 
     // landWorker = new CSWorker();
 
-let { fullW, fullH } = fullDimensions();
+    let { fullW, fullH } = fullDimensions();
     buffers = new Map();
     scaler = 1;
 
@@ -76,11 +76,21 @@ let { fullW, fullH } = fullDimensions();
     forecastTracks.strokeWeight(2);
     forecastTracks.stroke(240, 240, 0);
     forecastTracks.noFill();
-    landBuffer = createBufferImage(fullW, fullH);
-    outBasinBuffer = createBufferImage(fullW, fullH);
-    landShadows = createBufferImage(fullW, fullH);
-    coastLine = createBufferImage(fullW, fullH);
-        envLayer = createBuffer(WIDTH, HEIGHT, false, true);
+    landBuffer = createImage(fullW, fullH);
+    landBuffer.loadPixels();
+    // landBuffer.noStroke();
+    outBasinBuffer = createImage(fullW, fullH);
+    outBasinBuffer.loadPixels();
+    // outBasinBuffer.noStroke();
+    // outBasinBuffer.fill(COLORS.outBasin);
+    landShadows = createImage(fullW, fullH);
+    landShadows.loadPixels();
+    // landShadows.noStroke();
+    coastLine = createImage(fullW, fullH);
+    coastLine.loadPixels();
+    // coastLine.fill(0);
+    // coastLine.noStroke();
+    envLayer = createBuffer(WIDTH, HEIGHT, false, true);
     envLayer.colorMode(HSB);
     envLayer.strokeWeight(2);
     envLayer.noStroke();
@@ -91,7 +101,7 @@ let { fullW, fullH } = fullDimensions();
     snow = [];
     for (let i = 0; i < MAX_SNOW_LAYERS; i++) {
         snow[i] = createBufferImage(fullW, fullH);
-            }
+    }
 
     simSpeed = 0; // The exponent for the simulation speed (0 is full-speed, 1 is half-speed, etc.)
     lastUpdateTimestamp = performance.now(); // Keeps track of how much time has passed since the last simulation step to control the simulation at varying speeds
@@ -216,22 +226,22 @@ class Settings {
                     v = decodeB36StringArray(v);
                     db.settings.put(v, DB_KEY_SETTINGS)
                         .catch(err => {
-                        console.error(err);
-})
+                            console.error(err);
+                        })
                         .then(() => {
                             localStorage.removeItem(lsKey);
-                    });
+                        });
                 } else {
                     v = [];
-            }
+                }
             }
             order.forEach((key, i) => {
                 this[key] = v.length > 0 ? v.pop() : defaults[i];
             });
             order.forEach(key => {
-                    this[`set${key.charAt(0).toUpperCase()}${key.slice(1)}`] = (v, v2) => {
-                this.set(key, v, v2);
-            };
+                this[`set${key.charAt(0).toUpperCase()}${key.slice(1)}`] = (v, v2) => {
+                    this.set(key, v, v2);
+                };
             });
         });
     }
@@ -247,7 +257,7 @@ class Settings {
     save() {
         const order = Settings.order();
         let v = Object.keys(this).filter(key => order.has(key)).map(key => this[key]);
-                db.settings.put(v, DB_KEY_SETTINGS).catch(err => {
+        db.settings.put(v, DB_KEY_SETTINGS).catch(err => {
             console.error(err);
         });
     }

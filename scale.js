@@ -75,10 +75,8 @@ class Scale {
         let color;
         if (subtropical && clsn.subtropicalColor) color = clsn.subtropicalColor;
         else color = clsn.color;
-        if (typeof color === 'string' && color.charAt(0) === '$')
-            return COLOR_SCHEMES[simSettings.colorScheme].values[color.slice(1)];
-        else
-            return color;
+        if(color instanceof Array) return color[this.colorSchemeValue];
+        return color;
     }
 
     getIcon() {
@@ -688,87 +686,4 @@ Scale.presetScales = [
     Scale.JMA,
     Scale.IMD,
     Scale.southwestIndianOcean
-];
-
-// -- Color Schemes -- //
-
-const COLOR_SCHEMES = [
-    {
-        name: 'Classic',
-        values: {
-            'TDi': 'rgb(75,75,245)',
-            'SDi': 'rgb(95,95,235)',
-            'TD': 'rgb(20,20,230)',
-            'SD': 'rgb(60,60,220)',
-            'TS': 'rgb(20,230,20)',
-            'SS': 'rgb(60,220,60)',
-            'STS': 'rgb(180,230,20)',
-            'SSS': 'rgb(180,220,85)',
-            'TY': 'rgb(230,230,20)',
-            'VSTY': 'rgb(240,20,20)',
-            'C1': 'rgb(230,230,20)',
-            'C2': 'rgb(240,170,20)',
-            'C3': 'rgb(240,20,20)',
-            'C4': 'rgb(250,40,250)',
-            'C5': 'rgb(250,140,250)',
-            'C6': 'rgb(250,200,250)',
-            'C7': 'rgb(240,90,90)',
-            'C8': 'rgb(190,60,60)',
-            'C9': 'rgb(130,10,10)',
-            'C10': 'rgb(120,10,120)',
-            'HYC': 'rgb(20,0,140)'
-        }
-    },
-    {
-        name: 'Wiki',
-        values: {
-            'TDi': '#1591DE',
-            'SDi': '#1591DE',
-            'TD': '#6EC1EA',
-            'SD': '#6EC1EA',
-            'TS': '#4DFFFF',
-            'SS': '#4DFFFF',
-            'STS': '#C0FFC0',
-            'SSS': '#C0FFC0',
-            'TY': '#FFD98C',
-            'VSTY': '#FF738A',
-            'C1': '#FFFFD9',
-            'C2': '#FFD98C',
-            'C3': '#FF9E59',
-            'C4': '#FF738A',
-            'C5': '#A188FC',
-            'C6': '#A188FC',
-            'C7': '#A188FC',
-            'C8': '#A188FC',
-            'C9': '#A188FC',
-            'C10': '#A188FC',
-            'HYC': '#A188FC'
-        }
-    },
-    {
-        name: 'Wiki (Pre-2023/HHW)',
-        values: {
-            'TDi': '#80ccff',
-            'SDi': '#80ccff',
-            'TD': '#5ebaff',
-            'SD': '#5ebaff',
-            'TS': '#00faf4',
-            'SS': '#00faf4',
-            'STS': '#ccffff',
-            'SSS': '#ccffff',
-            'TY': '#fdaf9a',
-            'VSTY': '#fe887d',
-            'C1': '#ffffcc',
-            'C2': '#ffe775',
-            'C3': '#ffc140',
-            'C4': '#ff8f20',
-            'C5': '#ff6060',
-            'C6': '#8b0000',
-            'C7': '#cc0033',
-            'C8': '#cc0066',
-            'C9': '#9B30FF',
-            'C10': '#F9A7B0',
-            'HYC': '#ff99ff'
-        }
-    }
 ];
