@@ -21,18 +21,17 @@ function createBuffer(w = WIDTH, h = HEIGHT, alwaysFull = false, noScale = false
 function rescaleCanvases(s) {
     buffers.forEach(([buffer, metadata]) => {
         if (!metadata.alwaysFull) {
-            buffer.resizeCanvas(Math.floor(metadata.baseWidth * s), Math.floor(metadata.baseHeight * s));
+            buffer.resizeCanvas(floor(metadata.baseWidth * s), floor(metadata.baseHeight * s));
             if (!metadata.noScale) buffer.scale(s);
         }
     });
-    resizeCanvas(Math.floor(WIDTH * s), Math.floor(HEIGHT * s));
+    resizeCanvas(floor(WIDTH * s), floor(HEIGHT * s));
 }
 
 function toggleFullscreen() {
-    if (document.fullscreenElement === canvas || deviceOrientation === PORTRAIT) {
-        document.exitFullscreen();
-    } else {
-        document.documentElement.requestFullscreen().then(() => {
+    if (document.fullscreenElement === canvas || deviceOrientation === PORTRAIT) document.exitFullscreen();
+    else {
+        canvas.requestFullscreen().then(function () {
             scaler = displayWidth / WIDTH;
             rescaleCanvases(scaler);
             if (UI.viewBasin) {
@@ -54,21 +53,20 @@ function drawBuffer(b) {
 }
 
 function getMouseX() {
-    return Math.floor(mouseX / scaler);
+    return floor(mouseX / scaler);
 }
 
 function getMouseY() {
-    return Math.floor(mouseY / scaler);
+    return floor(mouseY / scaler);
 }
 
 function coordinateInCanvas(x, y, isPixelCoordinate) {
-    const maxX = isPixelCoordinate ? width : WIDTH;
-    const maxY = isPixelCoordinate ? height : HEIGHT;
-    return x >= 0 && x < maxX && y >= 0 && y < maxY;
+    if (isPixelCoordinate) return x >= 0 && x < width && y >= 0 && y < height;
+    return x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT;
 }
 
-function cbrt(n) {  // Cubed root function since p5 doesn't have one nor does pow(n,1/3) work for negative numbers
-    return n < 0 ? -Math.pow(Math.abs(n), 1 / 3) : Math.pow(n, 1 / 3);
+function cbrt(n) {   // Cubed root function since p5 doesn't have one nor does pow(n,1/3) work for negative numbers
+    return n < 0 ? -pow(abs(n), 1 / 3) : pow(n, 1 / 3);
 }
 
 function zeroPad(n, d) {
@@ -91,33 +89,18 @@ function hashCode(str) {
     let hash = 0;
     if (str.length === 0) return hash;
     for (let i = 0; i < str.length; i++) {
-        hash = ((hash << 5) - hash) + str.charCodeAt(i);
-        hash &= hash; // Convert to 32bit integer
+        let char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
     }
     return hash;
 }
 
-// loadImg
-const imgCache = new Map();
-
-function loadImg(path) {
-    // Check if the image is in the cache
-    if (imgCache.has(path)) {
-        // If the image is in the cache, return a Promise that resolves with the cached image
-        return Promise.resolve(imgCache.get(path));
-    }
-
-    // If the image is not in the cache, load it and add it to the cache
-    return new Promise(resolve => {
-        loadImage(path, img => {
-            // Add the image to the cache
-            imgCache.set(path, img);
-            // Resolve the Promise with the image
-            resolve(img);
+function loadImg(path) {     // wrap p5.loadImage in a promise
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            loadImage(path, resolve, reject);
         });
-    }).catch(e => {
-        // Log any errors to the console
-        console.error(e);
     });
 }
 
@@ -125,38 +108,21 @@ function loadImg(path) {
 function waitForAsyncProcess(func, desc, ...args) {  // add .then() callbacks inside of func before returning the promise, but add .catch() to the returned promise of waitForAsyncProcess
     waitingFor++;
     if (waitingFor < 2) {
-        waitingTCSymbolSHem = Math.random() < 0.5;
+        waitingDesc = desc;
+        waitingTCSymbolSHem = random() < 0.5;
     }
-    let descIndex = waitingDescs.lowestAvailable;
-    if (descIndex > waitingDescs.maxIndex) {
-        waitingDescs.maxIndex = descIndex;
-    }
-    for (let i = descIndex + 1; i <= waitingDescs.maxIndex + 1; i++) {
-        if (!waitingDescs[i]) {
-            waitingDescs.lowestAvailable = i;
-            break;
-        }
-    }
-    waitingDescs[descIndex] = desc;
-    let endWait = () => {
-        waitingFor--;
-        waitingDescs[descIndex] = undefined;
-        if (descIndex < waitingDescs.lowestAvailable)
-            waitingDescs.lowestAvailable = descIndex;
-        if (descIndex >= waitingDescs.maxIndex) {
-            for (let i = descIndex; i >= -1; i--) {
-                if (i < 0 || waitingDescs[i]) {
-                    waitingDescs.maxIndex = i;
-                    break;
-                }
-            }
-        }
-    };
+    else waitingDesc = "Waiting...";
     let p = func(...args);
     if (p instanceof Promise || p instanceof Dexie.Promise) {
-        return p.finally(() => endWait());
+        return p.then(v => {
+            waitingFor--;
+            return v;
+        }).catch(e => {
+            waitingFor--;
+            throw e;
+        });
     }
-    endWait();
+    waitingFor--;
     return Promise.resolve(p);
 }
 
@@ -237,10 +203,13 @@ function upgradeLegacySaves() {
     });
 }
 
-document.onfullscreenchange = () => {
-    document.fullscreenElement === null ? rescaleCanvases(1) : undefined;
-    if (UI.viewBasin) {
-        refreshTracks(true);
-        UI.viewBasin.env.displayLayer();
+document.onfullscreenchange = function () {
+    if (document.fullscreenElement === null) {
+        scaler = 1;
+        rescaleCanvases(scaler);
+        if (UI.viewBasin) {
+            refreshTracks(true);
+            UI.viewBasin.env.displayLayer();
+        }
     }
 };
