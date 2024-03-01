@@ -369,6 +369,7 @@ function defineColors() {    // Since p5 color() function doesn't work until set
     COLORS.UI.buttonBox = color(200, 170);
     COLORS.UI.buttonHover = color(200);
     COLORS.UI.text = color(0);
+    COLORS.UI.altText = color(255);
     COLORS.UI.greyText = color(130);
     COLORS.UI.redText = color(240, 0, 0);
     COLORS.UI.nonSelectedInput = color(70);

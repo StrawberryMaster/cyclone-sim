@@ -425,7 +425,7 @@ UI.init = function () {
     let itemIndex = Math.floor(Math.random() * startItems.length)
 
     mainMenu.append(false, WIDTH / 2, HEIGHT / 4, 0, 0, function (s) {  // title text
-        fill(COLORS.UI.text);
+        fill(COLORS.UI.altText);
         noStroke();
         textAlign(CENTER, CENTER);
         textSize(36);
