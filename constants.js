@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "0.4.14";
+const VERSION_NUMBER = "0.4.15";
 
 const SAVE_FORMAT = 7;  // Format #7 in use starting in v0.4
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -42,8 +42,8 @@ const EARTH_SB_IDS = {
     nio: 192
 };
 const MAP_TYPES = [     // Land generation controls and option presets for different map types
-    {   
-		label: "Two Continents",
+    {
+        label: "Two Continents",
         form: "linear",
         landBiasFactors: [
             5 / 8,        // Where the "center" should be for land/ocean bias (0-1 scale from west to east)
@@ -55,8 +55,8 @@ const MAP_TYPES = [     // Land generation controls and option presets for diffe
             designations: 22
         }
     },
-    {   
-		label: "East Continent",
+    {
+        label: "East Continent",
         form: "linear",
         landBiasFactors: [
             5 / 8,
@@ -68,8 +68,8 @@ const MAP_TYPES = [     // Land generation controls and option presets for diffe
             designations: 22
         }
     },
-    {   
-		label: "West Continent",
+    {
+        label: "West Continent",
         form: "linear",
         landBiasFactors: [
             1 / 2,
@@ -81,8 +81,8 @@ const MAP_TYPES = [     // Land generation controls and option presets for diffe
             designations: 22
         }
     },
-    {   
-		label: "Island Ocean",
+    {
+        label: "Island Ocean",
         form: "linear",
         landBiasFactors: [
             1 / 2,
@@ -94,8 +94,8 @@ const MAP_TYPES = [     // Land generation controls and option presets for diffe
             designations: 22
         }
     },
-    {   
-		label: "Central Continent",
+    {
+        label: "Central Continent",
         form: "radial",
         landBiasFactors: [
             1 / 2,    // Where the east-west center should be (0-1 scale from west to east)
@@ -110,8 +110,8 @@ const MAP_TYPES = [     // Land generation controls and option presets for diffe
             designations: 22
         }
     },
-    {   
-		label: "Central Inland Sea",
+    {
+        label: "Central Inland Sea",
         form: "radial",
         landBiasFactors: [
             1 / 2,
@@ -126,8 +126,8 @@ const MAP_TYPES = [     // Land generation controls and option presets for diffe
             designations: 22
         }
     },
-    {   
-		label: "Atlantic",
+    {
+        label: "Atlantic",
         form: 'earth',
         west: -102.67,
         east: 3,
@@ -140,8 +140,8 @@ const MAP_TYPES = [     // Land generation controls and option presets for diffe
             designations: 0
         }
     },
-    {   
-		label: "Eastern Pacific",
+    {
+        label: "Eastern Pacific",
         form: 'earth',
         west: -180,
         east: -74.33,
@@ -154,8 +154,8 @@ const MAP_TYPES = [     // Land generation controls and option presets for diffe
             designations: 1
         }
     },
-    {   
-		label: "Western Pacific",
+    {
+        label: "Western Pacific",
         form: 'earth',
         west: 94.42,
         east: -159.91,
@@ -168,8 +168,8 @@ const MAP_TYPES = [     // Land generation controls and option presets for diffe
             designations: 3
         }
     },
-    {   
-		label: "Northern Indian Ocean",
+    {
+        label: "Northern Indian Ocean",
         form: 'earth',
         west: 25.95,
         east: 131.62,
@@ -182,8 +182,8 @@ const MAP_TYPES = [     // Land generation controls and option presets for diffe
             designations: 5
         }
     },
-    {   
-		label: "Australian Region",
+    {
+        label: "Australian Region",
         form: 'earth',
         west: 82.03,
         east: -172.29,
@@ -196,8 +196,8 @@ const MAP_TYPES = [     // Land generation controls and option presets for diffe
             designations: 6
         }
     },
-    {   
-		label: "South Pacific",
+    {
+        label: "South Pacific",
         form: 'earth',
         west: 147.2,
         east: -107.13,
@@ -210,8 +210,8 @@ const MAP_TYPES = [     // Land generation controls and option presets for diffe
             designations: 7
         }
     },
-    {   
-		label: "South-West Indian Ocean",
+    {
+        label: "South-West Indian Ocean",
         form: 'earth',
         west: 17.25,
         east: 122.93,
@@ -224,8 +224,8 @@ const MAP_TYPES = [     // Land generation controls and option presets for diffe
             designations: 8
         }
     },
-    {   
-		label: "South Atlantic",
+    {
+        label: "South Atlantic",
         form: 'earth',
         west: -81.48,
         east: 24.19,
@@ -238,8 +238,8 @@ const MAP_TYPES = [     // Land generation controls and option presets for diffe
             designations: 9
         }
     },
-    {   
-		label: "Mediterranean",
+    {
+        label: "Mediterranean",
         form: 'earth',
         west: -10.32,
         east: 42.52,
