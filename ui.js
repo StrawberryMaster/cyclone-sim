@@ -426,7 +426,8 @@ UI.init = function () {
 
     mainMenu.append(false, WIDTH / 2, HEIGHT / 4, 0, 0, function (s) {  // title text
         fill(COLORS.UI.altText);
-        noStroke();
+        stroke(0);
+        strokeWeight(2);
         textAlign(CENTER, CENTER);
         textSize(36);
         text(TITLE, 0, 0);
@@ -682,11 +683,12 @@ UI.init = function () {
     loadMenu.page = 0;
 
     loadMenu.append(false, WIDTH / 2, HEIGHT / 8, 0, 0, function (s) { // menu title text
-        fill(COLORS.UI.text);
-        noStroke();
+        fill(COLORS.UI.altText);
+        stroke(0);
+        strokeWeight(2);
         textAlign(CENTER, CENTER);
         textSize(36);
-        text("Load Basin", 0, 0);
+        text("Load basin", 0, 0);
     });
 
     loadMenu.refresh = function () {
@@ -803,8 +805,9 @@ UI.init = function () {
     // Settings Menu
 
     settingsMenu.append(false, WIDTH / 2, HEIGHT / 8, 0, 0, function (s) { // menu title text
-        fill(COLORS.UI.text);
-        noStroke();
+        fill(COLORS.UI.altText);
+        stroke(0);
+        strokeWeight(2);
         textAlign(CENTER, CENTER);
         textSize(36);
         text("Settings", 0, 0);
