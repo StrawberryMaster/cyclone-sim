@@ -374,5 +374,5 @@ function defineColors() {    // Since p5 color() function doesn't work until set
     COLORS.UI.redText = color(240, 0, 0);
     COLORS.UI.nonSelectedInput = color(70);
     COLORS.UI.input = color(255);
-    COLORS.UI.loadingSymbol = color(0, 40, 85);
+    COLORS.UI.loadingSymbol = color(255, 140, 90);
 }
