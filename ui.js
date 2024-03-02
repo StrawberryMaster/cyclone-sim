@@ -2391,6 +2391,19 @@ function ktsToKmh(k, rnd) {
     return val;
 }
 
+function displayWindspeed(kts, rnd) {
+    const unitLabels = ['kts', 'mph', 'km/h'];
+    const conversionFunctions = [kts => kts, ktsToMph, ktsToKmh];
+    const speedUnit = simSettings.speedUnit;
+    rnd = rnd || WINDSPEED_ROUNDING;
+
+    const value = conversionFunctions[speedUnit](kts, rnd);
+    const unitLabel = unitLabels[speedUnit];
+
+    return `${value} ${unitLabel}`;
+}
+
+
 function oneMinToTenMin(w, rnd) {
     let val = w * 7 / 8;    // simple ratio
     if (rnd) val = round(val / rnd) * rnd;
