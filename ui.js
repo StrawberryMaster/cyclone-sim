@@ -2403,7 +2403,6 @@ function displayWindspeed(kts, rnd) {
     return `${value} ${unitLabel}`;
 }
 
-
 function oneMinToTenMin(w, rnd) {
     let val = w * 7 / 8;    // simple ratio
     if (rnd) val = round(val / rnd) * rnd;
@@ -2418,51 +2417,22 @@ function mbToInHg(mb, rnd) {
 
 // converts a radians-from-east angle into a degrees-from-north heading with compass direction for display formatting
 function compassHeading(rad) {
-    // force rad into range of zero to two-pi
-    if (rad < 0)
-        rad = 2 * PI - (-rad % (2 * PI));
-    else
-        rad = rad % (2 * PI);
-    // convert heading from radians-from-east to degrees-from-north
-    let heading = map(rad, 0, 2 * PI, 90, 450) % 360;
-    let compass;
-    // calculate compass direction
-    if (heading < 11.25)
-        compass = 'N';
-    else if (heading < 33.75)
-        compass = 'NNE';
-    else if (heading < 56.25)
-        compass = 'NE';
-    else if (heading < 78.75)
-        compass = 'ENE';
-    else if (heading < 101.25)
-        compass = 'E';
-    else if (heading < 123.75)
-        compass = 'ESE';
-    else if (heading < 146.25)
-        compass = 'SE';
-    else if (heading < 168.75)
-        compass = 'SSE';
-    else if (heading < 191.25)
-        compass = 'S';
-    else if (heading < 213.75)
-        compass = 'SSW';
-    else if (heading < 236.25)
-        compass = 'SW';
-    else if (heading < 258.75)
-        compass = 'WSW';
-    else if (heading < 281.25)
-        compass = 'W';
-    else if (heading < 303.75)
-        compass = 'WNW';
-    else if (heading < 326.25)
-        compass = 'NW';
-    else if (heading < 348.75)
-        compass = 'NNW';
-    else
-        compass = 'N';
-    heading = round(heading);
-    return heading + '\u00B0 '/* degree sign */ + compass;
+    // force rad into range of zero to two-pi, then converting to degrees
+    rad = (rad % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+    let heading = (rad * 180 / Math.PI + 90) % 360;
+
+    const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+
+    // getting the index of the compass direction
+    const index = Math.floor((heading + 11.25) / 22.5);
+
+    // rounding the heading to the nearest integer
+    heading = Math.round(heading);
+
+    // getting the compass direction
+    const compass = directions[index % 16];
+
+    return `${heading}\u00B0 ${compass}`;
 }
 
 function damageDisplayNumber(d) {
