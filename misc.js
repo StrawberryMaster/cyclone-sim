@@ -11,9 +11,14 @@ function refreshTracks(force) {
     else for (let s of UI.viewBasin.fetchSeason(viewTick, true, true).forSystems()) s.renderTrack();
 }
 
-function createBuffer(w = WIDTH, h = HEIGHT, alwaysFull = false, noScale = false) {
-    let b = createGraphics(w, h);
-    let metadata = { w, h, alwaysFull, noScale };
+function createBuffer(w = WIDTH, h = HEIGHT, alwaysFull, noScale) {
+    const b = createGraphics(w, h);
+    const metadata = {
+        baseWidth: w,
+        baseHeight: h,
+        alwaysFull,
+        noScale
+    };
     buffers.set(b, metadata);
     return b;
 }
