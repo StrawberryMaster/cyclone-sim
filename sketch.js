@@ -75,7 +75,7 @@ function setup() {
     // forecastTracks.stroke(240,240,0);
     // forecastTracks.noFill();
     forecastTracks.noStroke();
-    forecastTracks.fill(255, 100);
+    forecastTracks.fill(255);
     landBuffer = createImage(fullW, fullH);
     landBuffer.loadPixels();
     // landBuffer.noStroke();
@@ -141,10 +141,10 @@ function draw() {
                 if (keyIsPressed && document.activeElement !== textInput && (keyRepeatFrameCounter >= KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter === 0) && keyRepeatFrameCounter % KEY_REPEATER === 0) {
                     if (paused && primaryWrapper.showing) {
                         if (keyCode === LEFT_ARROW && viewTick >= ADVISORY_TICKS) {
-                            changeViewTick(Math.ceil(viewTick / ADVISORY_TICKS - 1) * ADVISORY_TICKS);
+                            changeViewTick(ceil(viewTick / ADVISORY_TICKS - 1) * ADVISORY_TICKS);
                         } else if (keyCode === RIGHT_ARROW) {
                             let t;
-                            if (viewTick < UI.viewBasin.tick - ADVISORY_TICKS) t = Math.floor(viewTick / ADVISORY_TICKS + 1) * ADVISORY_TICKS;
+                            if (viewTick < UI.viewBasin.tick - ADVISORY_TICKS) t = floor(viewTick / ADVISORY_TICKS + 1) * ADVISORY_TICKS;
                             else t = UI.viewBasin.tick;
                             changeViewTick(t);
                         }
@@ -208,7 +208,6 @@ function draw() {
         noLoop();
     }
 }
-
 class Settings {
     constructor() {
         const order = Settings.order();
