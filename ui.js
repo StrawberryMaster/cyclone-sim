@@ -462,8 +462,9 @@ UI.init = function () {
     Object.assign(advancedBasinSettings, MAP_TYPES[newBasinSettings.mapType || 0].optionPresets);
 
     basinCreationMenu.append(false, WIDTH / 2, HEIGHT / 16, 0, 0, function (s) { // menu title text
-        fill(COLORS.UI.text);
-        noStroke();
+        fill(COLORS.UI.altText);
+        stroke(0);
+        strokeWeight(2);
         textAlign(CENTER, CENTER);
         textSize(36);
         text("New Basin Settings", 0, 0);
@@ -486,6 +487,9 @@ UI.init = function () {
     })
 
     let yearsel = maptypesel.append(false, 0, basinCreationMenuButtonSpacing, 0, basinCreationMenuButtonHeights, function (s) { // Year selector
+        fill(COLORS.UI.altText);
+        stroke(0);
+        strokeWeight(2);
         textAlign(LEFT, CENTER);
         text("Starting year: ", 0, basinCreationMenuButtonHeights / 2);
     });
@@ -612,8 +616,9 @@ UI.init = function () {
     // basin creation menu advanced options
 
     basinCreationMenuAdvanced.append(false, WIDTH / 2, HEIGHT / 16, 0, 0, function (s) { // menu title text
-        fill(COLORS.UI.text);
-        noStroke();
+        fill(COLORS.UI.altText);
+        stroke(0);
+        strokeWeight(2);
         textAlign(CENTER, CENTER);
         textSize(36);
         text("New Basin Settings (Advanced)", 0, 0);
