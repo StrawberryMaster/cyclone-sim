@@ -2357,21 +2357,20 @@ function changeViewTick(t) {
 
 function wrapText(str, w) {
     let newStr = "";
-    let lines = str.split("\n");
-    for (let line of lines) {
-        let words = line.split(" ");
-        let currLine = "";
-        for (let word of words) {
-            if (textWidth(currLine + " " + word) > w) {
-                newStr += currLine + "\n";
-                currLine = word;
-            } else {
-                currLine += " " + word;
-            }
+    let currLine = "";
+    const words = str.split(" ");
+
+    for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+        if ((currLine + word).length > w) {
+            newStr += currLine.trim() + "\n";
+            currLine = word + " ";
+        } else {
+            currLine += word + " ";
         }
-        newStr += currLine + "\n";
     }
-    return newStr.slice(0, newStr.length - 1);
+    newStr += currLine.trim();
+    return newStr;
 }
 
 function countTextLines(str) {
