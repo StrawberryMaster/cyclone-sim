@@ -105,25 +105,23 @@ function loadImg(path) {     // wrap p5.loadImage in a promise
 }
 
 // waitForAsyncProcess allows the simulator to wait for things to load; unneeded for saving
-function waitForAsyncProcess(func, desc, ...args) {  // add .then() callbacks inside of func before returning the promise, but add .catch() to the returned promise of waitForAsyncProcess
+async function waitForAsyncProcess(func, desc, ...args) {
     waitingFor++;
     if (waitingFor < 2) {
         waitingDesc = desc;
         waitingTCSymbolSHem = random() < 0.5;
+    } else {
+        waitingDesc = "Waiting...";
     }
-    else waitingDesc = "Waiting...";
-    let p = func(...args);
-    if (p instanceof Promise || p instanceof Dexie.Promise) {
-        return p.then(v => {
-            waitingFor--;
-            return v;
-        }).catch(e => {
-            waitingFor--;
-            throw e;
-        });
+    
+    try {
+        let result = await func(...args);
+        waitingFor--;
+        return result;
+    } catch (error) {
+        waitingFor--;
+        throw error;
     }
-    waitingFor--;
-    return Promise.resolve(p);
 }
 
 async function makeAsyncProcess(func, ...args) {
