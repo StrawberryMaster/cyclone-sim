@@ -54,12 +54,12 @@ class Storm {
             const lastRecord = this.record[this.record.length - 1];
             return lastRecord !== undefined ? lastRecord : null;
         }
-        const index = Math.floor(t / ADVISORY_TICKS) - Math.ceil(this.birthTime / ADVISORY_TICKS);
+        const index = floor(t / ADVISORY_TICKS) - ceil(this.birthTime / ADVISORY_TICKS);
         return this.record[index];
     }
 
     get_tick_from_record_index(i) {
-        return (Math.ceil(this.birthTime / ADVISORY_TICKS) + i) * ADVISORY_TICKS;
+        return (ceil(this.birthTime / ADVISORY_TICKS) + i) * ADVISORY_TICKS;
     }
 
     getNameByTick(t) {
