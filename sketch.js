@@ -44,6 +44,7 @@ function setup() {
     waitingTCSymbolSHem = false; // yes seriously, a global var for this
     simSettings = new Settings();
 
+    textFont("Arial");
     textInput = document.createElement("input");
     textInput.type = "text";
     document.body.appendChild(textInput);
