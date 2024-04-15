@@ -807,7 +807,7 @@ ENV_DEFS.defaults.moisture = {
         colorMode(HSB);
         let c;
         if (v < 0.5) c = lerpColor(color(45, 100, 30), color(45, 1, 90), map(v, 0, 0.5, 0, 1));
-        else c = lerpColor(color(0, 56, 48), color(83, 47, 5), map(v, 0.5, 1, 0, 1));
+        else c = lerpColor(color(180, 1, 90), color(180, 100, 30), map(v, 0.5, 1, 0, 1));
         colorMode(RGB);
         return c;
     },
