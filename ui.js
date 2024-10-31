@@ -2593,22 +2593,32 @@ function compassHeading(rad) {
 }
 
 function damageDisplayNumber(d) {
-    switch (d) {
-        case 0:
-            return 'none';
-        case d < 50000000:
-            return 'minimal';
-        default:
-            return `$ ${Math.round(d / 1000000) / 1000}${d < 1000000000000 ? ' M' : d < 1000000000000 ? ' B' : ' T'}`;
-    }
+    if (d === 0) return 'none';
+    
+    const suffixes = ['', ' M', ' B', ' T'];
+    const thresholds = [0, 50_000_000, 1_000_000_000, 1_000_000_000_000];
+    
+    const index = thresholds.findLastIndex(threshold => d >= threshold);
+    
+    if (index === 1) return 'minimal';
+    
+    const divisor = thresholds[index];
+    const formattedValue = (d / divisor).toLocaleString('en-US', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 3
+    });
+    
+    return `$ ${formattedValue}${suffixes[index]}`;
 }
 
 function formatDate(m) {
-    if (m instanceof moment) {
-        const f = 'HH[z] MMM DD';
-        let str = `${m.format(f)} ${zeroPad(Math.abs(m.year()), 4)}`;
-        return m.year() < 1 ? `${str} B.C.E.` : str;
-    }
+    if (!m || !(m instanceof moment)) return '';
+
+    const format = 'HH[z] MMM DD';
+    const yearStr = zeroPad(Math.abs(m.year()), 4);
+    const eraStr = m.year() < 1 ? ' B.C.E.' : '';
+    
+    return `${m.format(format)} ${yearStr}${eraStr}`;
 }
 
 function seasonName(y, h) {
