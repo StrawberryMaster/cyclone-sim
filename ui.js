@@ -2594,20 +2594,20 @@ function compassHeading(rad) {
 
 function damageDisplayNumber(d) {
     if (d === 0) return 'none';
-    
+
     const suffixes = ['', ' M', ' B', ' T'];
     const thresholds = [0, 50_000_000, 1_000_000_000, 1_000_000_000_000];
-    
+
     const index = thresholds.findLastIndex(threshold => d >= threshold);
-    
+
     if (index === 1) return 'minimal';
-    
+
     const divisor = thresholds[index];
     const formattedValue = (d / divisor).toLocaleString('en-US', {
         minimumFractionDigits: 1,
         maximumFractionDigits: 3
     });
-    
+
     return `$ ${formattedValue}${suffixes[index]}`;
 }
 
@@ -2617,7 +2617,7 @@ function formatDate(m) {
     const format = 'HH[z] MMM DD';
     const yearStr = zeroPad(Math.abs(m.year()), 4);
     const eraStr = m.year() < 1 ? ' B.C.E.' : '';
-    
+
     return `${m.format(format)} ${yearStr}${eraStr}`;
 }
 
