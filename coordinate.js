@@ -22,9 +22,9 @@ class Coordinate {
             lat = long.latitude;
             long = long.longitude;
         }
-        let long_dist = Math.abs(this.longitude - long);
-        long_dist = Math.min(long_dist, 360 - long_dist);
-        let lat_dist = Math.abs(this.latitude - lat);
+        let long_dist = abs(this.longitude - long);
+        long_dist = min(long_dist, 360 - long_dist);
+        let lat_dist = abs(this.latitude - lat);
         return Math.hypot(long_dist, lat_dist);
     }
 
