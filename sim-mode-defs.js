@@ -472,9 +472,9 @@ ENV_DEFS.defaults.ULSteering = {
     displayName: 'Upper-level steering',
     version: 0,
     mapFunc: (u, x, y, z) => {
-        u.vec.set(1); // reset vector
+        u.vec.set(1);                                                                           // reset vector
 
-        const dx = u.modifiers.jetstreamDeltaX; // delta-x for jetstream differential (used for calculating wind direction in and near jetstream)
+        const dx = u.modifiers.jetstreamDeltaX;                                                 // delta-x for jetstream differential (used for calculating wind direction in and near jetstream)
 
         let m = u.noise(1);
 
@@ -498,26 +498,23 @@ ENV_DEFS.defaults.ULSteering = {
         let a = map(u.noise(0), 0, 1, 0, 4 * TAU);                                                    // noise angle
         m = pow(u.modifiers.noiseBase, map(m, 0, 1, u.modifiers.noiseExponentMin, u.modifiers.noiseExponentMax)) * jOP; // noise magnitude
 
+        // apply noise
         u.vec.rotate(a);
         u.vec.mult(m);
 
         // apply UL winds
-        u.vec.x += jet * Math.cos(jAngle); // apply jetstream
-        u.vec.y += jet * Math.sin(jAngle);
-        u.vec.x += trof * Math.cos(tAngle); // apply trough push
-        u.vec.y += trof * Math.sin(tAngle);
-        u.vec.x += hadley * Math.cos(hAngle); // apply winds equatorward of jetstream
-        u.vec.y += hadley * Math.sin(hAngle);
-        u.vec.x += ferrel * Math.cos(fAngle); // apply winds poleward of jetstream
-        u.vec.y += ferrel * Math.sin(fAngle);
+        u.vec.add(jet * cos(jAngle), jet * sin(jAngle));                                             // apply jetstream
+        u.vec.add(trof * cos(tAngle), trof * sin(tAngle));                                           // apply trough push
+        u.vec.add(hadley * cos(hAngle), hadley * sin(hAngle));                                       // apply winds equatorward of jetstream
+        u.vec.add(ferrel * cos(fAngle), ferrel * sin(fAngle));                                       // apply winds poleward of jetstream
 
         return u.vec;
     },
     displayFormat: v => {
-        const speed = Math.round(v.mag() * 100) / 100;
-        const direction = v.heading();
+        let speed = round(v.mag() * 100) / 100;
+        let direction = v.heading();
         // speed is still in "u/hr" (coordinate units per hour) for now
-        return `${speed} u/hr ${compassHeading(direction)}`;
+        return speed + ' u/hr ' + compassHeading(direction);
     },
     vector: true,
     magMap: [0, 8, 0, 25],
@@ -645,9 +642,9 @@ ENV_DEFS.defaults.SSTAnomaly = {
         let v = u.noise(0);
         v = v * 2;
         let i = v < 1 ? -1 : 1;
-        v = 1 - Math.abs(1 - v);
+        v = 1 - abs(1 - v);
         if (v === 0) v = 0.000001;
-        v = Math.log(v);
+        v = log(v);
         let r;
         if (u.modifiers.r !== undefined) r = u.modifiers.r;
         else r = map(y, 0, HEIGHT, 6, 3);
@@ -917,8 +914,8 @@ STORM_ALGORITHM.defaults.core = function (sys, u) {
 
     let targetWarmCore = (lnd ?
         sys.lowerWarmCore :
-        Math.max(Math.pow(map(SST, 10, 25, 0, 1, true), 3), sys.lowerWarmCore)
-    ) * map(jet, 0, 75, Math.pow(1 - sys.depth, 2), 1, true);
+        max(pow(map(SST, 10, 25, 0, 1, true), 3), sys.lowerWarmCore)
+    ) * map(jet, 0, 75, sq(1 - sys.depth), 1, true);
     sys.lowerWarmCore = lerp(sys.lowerWarmCore, targetWarmCore, sys.lowerWarmCore > targetWarmCore ? map(jet, 0, 75, 0.4, 0.06, true) : 0.04);
     sys.upperWarmCore = lerp(sys.upperWarmCore, sys.lowerWarmCore, sys.lowerWarmCore > sys.upperWarmCore ? 0.05 : 0.4);
     sys.lowerWarmCore = constrain(sys.lowerWarmCore, 0, 1);
