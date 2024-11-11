@@ -11,26 +11,23 @@ function refreshTracks(force) {
     else for (let s of UI.viewBasin.fetchSeason(viewTick, true, true).forSystems()) s.renderTrack();
 }
 
-function createBuffer(w = WIDTH, h = HEIGHT, alwaysFull, noScale) {
+function createBuffer(w = WIDTH, h = HEIGHT, alwaysFull = false, noScale = false) {
     const b = createGraphics(w, h);
-    const metadata = {
-        baseWidth: w,
-        baseHeight: h,
-        alwaysFull,
-        noScale
-    };
+    const metadata = { baseWidth: w, baseHeight: h, alwaysFull, noScale };
     buffers.set(b, metadata);
     return b;
 }
 
 function rescaleCanvases(s) {
-    buffers.forEach(([buffer, metadata]) => {
-        if (!metadata.alwaysFull) {
-            buffer.resizeCanvas(floor(metadata.baseWidth * s), floor(metadata.baseHeight * s));
-            if (!metadata.noScale) buffer.scale(s);
+    for (const [buffer, { baseWidth, baseHeight, alwaysFull, noScale }] of buffers) {
+        if (!alwaysFull) {
+            const newWidth = Math.floor(baseWidth * s);
+            const newHeight = Math.floor(baseHeight * s);
+            buffer.resizeCanvas(newWidth, newHeight);
+            if (!noScale) buffer.scale(s);
         }
-    });
-    resizeCanvas(floor(WIDTH * s), floor(HEIGHT * s));
+    }
+    resizeCanvas(Math.floor(WIDTH * s), Math.floor(HEIGHT * s));
 }
 
 function toggleFullscreen() {
@@ -75,29 +72,29 @@ function cbrt(n) {   // Cubed root function since p5 doesn't have one nor does p
 }
 
 function zeroPad(n, d) {
-    n = parseFloat(n);
-    if (!Number.isNaN(n)) {
-        const int = Math.trunc(n);
-        let str = Math.abs(int).toString().padStart(d, '0');
-        if (int < 0) {
-            str = `-${str}`;
-        }
-        const fraction = Math.abs(n) - Math.abs(int);
-        if (fraction > 0) {
-            str += fraction.toString().slice(1);
-        }
-        return str;
+    const num = parseFloat(n);
+    if (!Number.isNaN(num)) {
+        const isNegative = num < 0;
+        const absNum = Math.abs(num);
+        const intPart = Math.floor(absNum).toString();
+        const paddedInt = intPart.padStart(d, '0');
+        const decimalPart = absNum.toString().includes('.') ? absNum.toString().slice(absNum.toString().indexOf('.')) : '';
+        return (isNegative ? '-' : '') + paddedInt + decimalPart;
     }
+    return undefined;
 }
 
 function hashCode(str) {
+    if (!str) return 0;
+
     let hash = 0;
-    if (str.length === 0) return hash;
-    for (let i = 0; i < str.length; i++) {
-        let char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
+    const len = str.length;
+
+    let i = 0;
+    while (i < len) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i++) | 0;
     }
+
     return hash;
 }
 
@@ -110,27 +107,57 @@ function loadImg(path) {     // wrap p5.loadImage in a promise
 }
 
 // waitForAsyncProcess allows the simulator to wait for things to load; unneeded for saving
-async function waitForAsyncProcess(func, desc, ...args) {
+function waitForAsyncProcess(func, desc, ...args) {
     waitingFor++;
-    if (waitingFor < 2) {
-        waitingDesc = desc;
-        waitingTCSymbolSHem = random() < 0.5;
-    } else {
-        waitingDesc = "Waiting...";
+    if (waitingFor === 1) {
+        waitingTCSymbolSHem = Math.random() < 0.5;
     }
-    
+
+    const descIndex = waitingDescs.lowestAvailable;
+    waitingDescs.maxIndex = Math.max(waitingDescs.maxIndex, descIndex);
+
+    waitingDescs.lowestAvailable = descIndex + 1;
+    while (waitingDescs[waitingDescs.lowestAvailable]) {
+        waitingDescs.lowestAvailable++;
+    }
+
+    waitingDescs[descIndex] = desc || "Waiting...";
+
+    const endWait = () => {
+        waitingFor--;
+        waitingDescs[descIndex] = undefined;
+        waitingDescs.lowestAvailable = Math.min(waitingDescs.lowestAvailable, descIndex);
+
+        if (descIndex === waitingDescs.maxIndex) {
+            while (waitingDescs.maxIndex >= 0 && !waitingDescs[waitingDescs.maxIndex]) {
+                waitingDescs.maxIndex--;
+            }
+        }
+    };
+
     try {
-        let result = await func(...args);
-        waitingFor--;
-        return result;
+        const p = func(...args);
+        if (p instanceof Promise || p instanceof Dexie.Promise) {
+            return p.finally(endWait);
+        }
+        endWait();
+        return Promise.resolve(p);
     } catch (error) {
-        waitingFor--;
-        throw error;
+        endWait();
+        return Promise.reject(error);
     }
 }
 
-async function makeAsyncProcess(func, ...args) {
-    return await setTimeout(() => func(...args), 0);
+function makeAsyncProcess(func, ...args) {
+    return new Promise((resolve, reject) => {
+        queueMicrotask(() => {
+            try {
+                resolve(func(...args));
+            } catch (err) {
+                reject(err);
+            }
+        });
+    });
 }
 
 function upgradeLegacySaves() {
@@ -138,66 +165,60 @@ function upgradeLegacySaves() {
         return makeAsyncProcess(() => {
             // Rename saved basin keys for save slot 0 from versions v20190217a and prior
 
-            const oldPrefix = `${LOCALSTORAGE_KEY_PREFIX}0-`;
-            const newPrefix = `${LOCALSTORAGE_KEY_PREFIX}${LOCALSTORAGE_KEY_SAVEDBASIN}0-`;
-            const f = LOCALSTORAGE_KEY_FORMAT;
-            const b = LOCALSTORAGE_KEY_BASIN;
-            const n = LOCALSTORAGE_KEY_NAMES;
-            if (localStorage.getItem(`${oldPrefix}${f}`)) {
-                localStorage.setItem(`${newPrefix}${f}`, localStorage.getItem(`${oldPrefix}${f}`));
-                localStorage.removeItem(`${oldPrefix}${f}`);
-                localStorage.setItem(`${newPrefix}${b}`, localStorage.getItem(`${oldPrefix}${b}`));
-                localStorage.removeItem(`${oldPrefix}${b}`);
-                localStorage.setItem(`${newPrefix}${n}`, localStorage.getItem(`${oldPrefix}${n}`));
-                localStorage.removeItem(`${oldPrefix}${n}`);
+            let oldPrefix = LOCALSTORAGE_KEY_PREFIX + '0-';
+            let newPrefix = LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN + '0-';
+            let f = LOCALSTORAGE_KEY_FORMAT;
+            let b = LOCALSTORAGE_KEY_BASIN;
+            let n = LOCALSTORAGE_KEY_NAMES;
+            if (localStorage.getItem(oldPrefix + f)) {
+                localStorage.setItem(newPrefix + f, localStorage.getItem(oldPrefix + f));
+                localStorage.removeItem(oldPrefix + f);
+                localStorage.setItem(newPrefix + b, localStorage.getItem(oldPrefix + b));
+                localStorage.removeItem(oldPrefix + b);
+                localStorage.setItem(newPrefix + n, localStorage.getItem(oldPrefix + n));
+                localStorage.removeItem(oldPrefix + n);
             }
         }).then(() => {
             // Transfer localStorage saves to indexedDB
 
             return db.transaction('rw', db.saves, db.seasons, () => {
-                for (let i = localStorage.length - 1; i >= 0; i--) {
-                    const k = localStorage.key(i);
-                    if (k.startsWith(`${LOCALSTORAGE_KEY_PREFIX}${LOCALSTORAGE_KEY_SAVEDBASIN}`)) {
-                        let s = k.slice((`${LOCALSTORAGE_KEY_PREFIX}${LOCALSTORAGE_KEY_SAVEDBASIN}`).length);
+                for (let i = 0; i < localStorage.length; i++) {
+                    let k = localStorage.key(i);
+                    if (k.startsWith(LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN)) {
+                        let s = k.slice((LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN).length);
                         s = s.split('-');
                         let name = parseInt(s[0]);
                         if (name === 0) name = AUTOSAVE_SAVE_NAME;
                         else name = LEGACY_SAVE_NAME_PREFIX + name;
-                        const pre = `${LOCALSTORAGE_KEY_PREFIX}${LOCALSTORAGE_KEY_SAVEDBASIN}${s[0]}-`;
+                        let pre = LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN + s[0] + '-';
                         if (s[1] === LOCALSTORAGE_KEY_FORMAT) {
-                            const obj = {};
+                            let obj = {};
                             obj.format = parseInt(localStorage.getItem(k), SAVING_RADIX);
                             obj.value = {};
-                            obj.value.str = localStorage.getItem(`${pre}${LOCALSTORAGE_KEY_BASIN}`);
-                            obj.value.names = localStorage.getItem(`${pre}${LOCALSTORAGE_KEY_NAMES}`);
-                            db.saves.get(name).then(obj => {
-                                if (!obj) {
-                                    db.saves.put(obj, name);
-                                }
+                            obj.value.str = localStorage.getItem(pre + LOCALSTORAGE_KEY_BASIN);
+                            obj.value.names = localStorage.getItem(pre + LOCALSTORAGE_KEY_NAMES);
+                            db.saves.where(':id').equals(name).count().then(c => {
+                                if (c < 1) db.saves.put(obj, name);
                             });
                         } else if (s[1] + '-' === LOCALSTORAGE_KEY_SEASON) {
                             let y;
                             if (s[2] === '') y = -parseInt(s[3]);
                             else y = parseInt(s[2]);
-                            const obj = {};
+                            let obj = {};
                             obj.format = FORMAT_WITH_SAVED_SEASONS;
                             obj.saveName = name;
                             obj.season = y;
                             obj.value = localStorage.getItem(k);
-                            db.seasons.get([name, y]).then(obj => {
-                                if (!obj) {
-                                    db.seasons.put(obj);
-                                }
+                            db.seasons.where('[saveName+season]').equals([name, y]).count().then(c => {
+                                if (c < 1) db.seasons.put(obj);
                             });
                         }
                     }
                 }
             }).then(() => {
                 for (let i = localStorage.length - 1; i >= 0; i--) {
-                    const k = localStorage.key(i);
-                    if (k.startsWith(`${LOCALSTORAGE_KEY_PREFIX}${LOCALSTORAGE_KEY_SAVEDBASIN}`)) {
-                        localStorage.removeItem(k);
-                    }
+                    let k = localStorage.key(i);
+                    if (k.startsWith(LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN)) localStorage.removeItem(k);
                 }
             });
         });
