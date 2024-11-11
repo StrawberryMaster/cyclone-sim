@@ -1,4 +1,4 @@
-let paused,
+var paused,
     land,
     // landWorker,
     waitingFor,
@@ -51,23 +51,17 @@ function setup() {
     // document.body.appendChild(textInput);
     // textInput.style.position = "absolute";
     // textInput.style.left = "-500px";
-    // textInput.onblur = () => {
-    //     if (UI.focusedInput) UI.focusedInput.value = textInput.value;
+    // textInput.onblur = ()=>{
+    //     if(UI.focusedInput) UI.focusedInput.value = textInput.value;
     //     UI.focusedInput = undefined;
     // };
 
     // landWorker = new CSWorker();
 
-    let { fullW, fullH } = fullDimensions();
     buffers = new Map();
     scaler = 1;
 
-    const createBufferImage = (w, h) => {
-        const buffer = createImage(w, h);
-        buffer.loadPixels();
-        return buffer;
-    }
-
+    let { fullW, fullH } = fullDimensions();
     tracks = createBuffer();
     tracks.strokeWeight(2);
     stormIcons = createBuffer();
@@ -102,7 +96,10 @@ function setup() {
     magnifyingGlass.noStroke();
     snow = [];
     for (let i = 0; i < MAX_SNOW_LAYERS; i++) {
-        snow[i] = createBufferImage(fullW, fullH);
+        snow[i] = createImage(fullW, fullH);
+        snow[i].loadPixels();
+        // snow[i].noStroke();
+        // snow[i].fill(COLORS.snow);
     }
 
     simSpeed = 0; // The exponent for the simulation speed (0 is full-speed, 1 is half-speed, etc.)
@@ -201,71 +198,97 @@ function draw() {
         noLoop();
     }
 }
+
 class Settings {
+    #settings = new Map();
+
     constructor() {
+        this.#initializeSettings();
+    }
+
+    async #initializeSettings() {
         const order = Settings.order();
         const defaults = Settings.defaults();
-        waitForAsyncProcess(() => {
-            return db.settings.get(DB_KEY_SETTINGS);
-        }, 'Retrieving settings...').catch(err => {
-            console.error(err);
-        }).then(result => {
-            let v = result;
-            if (!v) {
-                let lsKey = LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SETTINGS;
-                v = localStorage.getItem(lsKey);
-                if (v) {
-                    v = decodeB36StringArray(v);
-                    db.settings.put(v, DB_KEY_SETTINGS)
-                        .catch(err => {
-                            console.error(err);
-                        })
-                        .then(() => {
-                            localStorage.removeItem(lsKey);
-                        });
-                } else {
-                    v = [];
-                }
+
+        waitingFor++;
+        waitingDescs[waitingDescs.lowestAvailable++] = "Retrieving settings...";
+
+        try {
+            let values = await this.#loadSettings();
+
+            order.forEach((key, index) => {
+                const value = values.length > 0 ? values.pop() : defaults[index];
+                this.#settings.set(key, value);
+
+                const setterName = `set${key.charAt(0).toUpperCase()}${key.slice(1)}`;
+                this[setterName] = (v, v2) => this.set(key, v, v2);
+
+                Object.defineProperty(this, key, {
+                    get: () => this.#settings.get(key)
+                });
+            });
+        } catch (err) {
+            console.error('Failed to initialize settings:', err);
+        } finally {
+            waitingFor--;
+            waitingDescs[--waitingDescs.lowestAvailable] = undefined;
+        }
+    }
+
+    async #loadSettings() {
+        try {
+            const dbSettings = await db.settings.get(DB_KEY_SETTINGS);
+            if (dbSettings) return dbSettings;
+
+            const lsKey = LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SETTINGS;
+            const legacySettings = localStorage.getItem(lsKey);
+            if (legacySettings) {
+                const decoded = decodeB36StringArray(legacySettings);
+                await db.settings.put(decoded, DB_KEY_SETTINGS);
+                localStorage.removeItem(lsKey);
+                return decoded;
             }
-            order.forEach((key, i) => {
-                this[key] = v.length > 0 ? v.pop() : defaults[i];
-            });
-            order.forEach(key => {
-                this[`set${key.charAt(0).toUpperCase()}${key.slice(1)}`] = (v, v2) => {
-                    this.set(key, v, v2);
-                };
-            });
-        });
+        } catch (err) {
+            console.error('Error loading settings:', err);
+        }
+        return [];
     }
 
     static order() {
-        return ["colorScheme", "speedUnit", "smoothLandColor", "showMagGlass", "snowLayers", "useShadows", "trackMode", "showStrength", "doAutosave"];    // add new settings to the beginning of this array
+        return [
+            "colorScheme",
+            "speedUnit",
+            "smoothLandColor",
+            "showMagGlass",
+            "snowLayers",
+            "useShadows",
+            "trackMode",
+            "showStrength",
+            "doAutosave"
+        ];
     }
 
     static defaults() {
-        return [0, 0, true, false, 2, false, 0, false, true];  // add new defaults to the beginning of this array
+        return [0, 0, true, false, 2, false, 0, false, true];
     }
 
-    save() {
-        const order = Settings.order();
-        let v = Object.keys(this).filter(key => order.has(key)).map(key => this[key]);
-        db.settings.put(v, DB_KEY_SETTINGS).catch(err => {
-            console.error(err);
-        });
+    async save() {
+        const values = Settings.order().map(key => this.#settings.get(key));
+        try {
+            await db.settings.put(values, DB_KEY_SETTINGS);
+        } catch (err) {
+            console.error('Failed to save settings:', err);
+        }
     }
 
-    set(k, v, v2) {
-        if (v === 'toggle') {
-            this[k] = !this[k];
-        } else if (v === 'incmod') {
-            this[k] = (this[k] + 1) % v2;
+    set(key, value, v2) {
+        if (value === "toggle") {
+            this.#settings.set(key, !this.#settings.get(key));
+        } else if (value === "incmod") {
+            this.#settings.set(key, (this.#settings.get(key) + 1) % v2);
         } else {
-            Object.assign(this, { [k]: v });
+            this.#settings.set(key, value);
         }
         this.save();
-    }
-
-    get(k) {         // accessing the property directly also works (only for getting)
-        return this[k];
     }
 }
