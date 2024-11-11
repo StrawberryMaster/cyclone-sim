@@ -681,85 +681,103 @@ class Land {
     *draw() {
         yield "Rendering land...";
         const { fullW: W, fullH: H } = fullDimensions();
-        const src = this.map.pixels; // source image for land data; red channel is elevation; green channel is land/water; blue channel is sub-basin id
+        const src = this.map.pixels;
 
-        // abbreviate pixel arrays of images to draw to
-        const landPx = landBuffer.pixels;
-        const coastPx = coastLine.pixels;
-        const outBasinPx = outBasinBuffer.pixels;
-
-        // cache colors for 256 possible land height values to avoid expensive calculations in pixel loop
-        const C = COLORS.land;
-        const colorCache = [];
-        for (let i = 255, ci = 0; i >= 0; i--) {
-            let l;
-            if (this.earth)
-                l = map(sqrt(map(i, 12, 150, 0, 1, true)), 0, 1, 0.501, 1);
-            else
-                l = Math.max(i / 255, 0.501);
-            if (C[ci] && l <= C[ci][0])
-                ci++;
-            if (ci >= C.length)
-                colorCache[i] = { r: 0, g: 0, b: 0 };
-            else {
-                let color = C[ci][1];
-                if (simSettings.smoothLandColor && ci > 0) {
-                    const color1 = C[ci - 1][1];
-                    const f = map(l, C[ci][0], C[ci - 1][0], 0, 1);
-                    color = lerpColor(color, color1, f);
-                }
-                colorCache[i] = { r: red(color), g: green(color), b: blue(color) };
-            }
+        // create buffers for land, coast, and out-basin pixels
+        if (!this._buffers) {
+            this._buffers = {
+                land: landBuffer.pixels,
+                coast: coastLine.pixels,
+                outBasin: outBasinBuffer.pixels
+            };
         }
-        colorCache.outBasin = { r: red(COLORS.outBasin), g: green(COLORS.outBasin), b: blue(COLORS.outBasin) };
+        const { land: landPx, coast: coastPx, outBasin: outBasinPx } = this._buffers;
+
+        if (!this._colorCache) {
+            this._colorCache = new Map();
+            const C = COLORS.land;
+
+            // re-calculate height->color mapping once
+            for (let i = 255, ci = 0; i >= 0; i--) {
+                const l = this.earth ?
+                    map(sqrt(map(i, 12, 150, 0, 1, true)), 0, 1, 0.501, 1) :
+                    Math.max(i / 255, 0.501);
+
+                if (C[ci] && l <= C[ci][0]) ci++;
+
+                const color = ci >= C.length ?
+                    { r: 0, g: 0, b: 0 } :
+                    this._getInterpolatedColor(C, ci, l);
+
+                this._colorCache.set(i, color);
+            }
+
+            this._colorCache.set('outBasin', {
+                r: red(COLORS.outBasin),
+                g: green(COLORS.outBasin),
+                b: blue(COLORS.outBasin)
+            });
+        }
 
         // cache of booleans of whether a sub-basin is out-basin or not; cached as-needed from within pixel loop as sub-basin ids are assumed unknown
-        const outBasinCache = {};
+        const outBasinCache = new Map();
+        const RGBA_CHANNELS = 4;
 
-        for (let i = 0; i < W; i++) {
-            for (let j = 0; j < H; j++) {
-                let index = 4 * (j * W + i);
-                if (src[index + 1]) { // if pixel is on land
-                    const v = src[index]; // land elevation value
-                    landPx[index] = colorCache[v].r;
-                    landPx[index + 1] = colorCache[v].g;
-                    landPx[index + 2] = colorCache[v].b;
+        const BLACK_RGBA = { r: 0, g: 0, b: 0, a: 255 };
+        const TRANSPARENT = { a: 0 };
+
+        const CHUNK_SIZE = 1000;
+        for (let chunk = 0; chunk < W * H; chunk += CHUNK_SIZE) {
+            const end = Math.min(chunk + CHUNK_SIZE, W * H);
+
+            for (let pos = chunk; pos < end; pos++) {
+                const i = pos % W;
+                const j = Math.floor(pos / W);
+                const index = RGBA_CHANNELS * pos;
+
+                if (src[index + 1]) { // land pixel
+                    const color = this._colorCache.get(src[index]);
+                    landPx[index] = color.r;
+                    landPx[index + 1] = color.g;
+                    landPx[index + 2] = color.b;
                     landPx[index + 3] = 255;
 
-                    let touchingOcean = false;
-                    if ((i > 0 && !src[index - 4 + 1]) ||
-                        (j > 0 && !src[index - 4 * W + 1]) ||
-                        (i < W - 1 && !src[index + 4 + 1]) ||
-                        (j < H - 1 && !src[index + 4 * W + 1])) {
-                        touchingOcean = true;
-                    }
+                    const hasOceanNeighbor =
+                        (i > 0 && !src[index - RGBA_CHANNELS + 1]) ||
+                        (j > 0 && !src[index - RGBA_CHANNELS * W + 1]) ||
+                        (i < W - 1 && !src[index + RGBA_CHANNELS + 1]) ||
+                        (j < H - 1 && !src[index + RGBA_CHANNELS * W + 1]);
 
-                    if (touchingOcean) {
-                        coastPx[index] = 0;
-                        coastPx[index + 1] = 0;
-                        coastPx[index + 2] = 0;
-                        coastPx[index + 3] = 255;
+                    if (hasOceanNeighbor) {
+                        Object.assign(coastPx.subarray(index, index + 4), BLACK_RGBA);
                     } else {
-                        coastPx[index + 3] = 0;
+                        coastPx[index + 3] = TRANSPARENT.a;
                     }
-                    outBasinPx[index + 3] = 0;
-                } else {
-                    landBuffer.pixels[index + 3] = 0;
-                    coastPx[index + 3] = 0;
-                    const sb = src[index + 2]; // sub-basin id
-                    if (outBasinCache[sb] === undefined)
-                        outBasinCache[sb] = !this.basin.subInBasin(sb);
-                    if (outBasinCache[sb]) {
-                        outBasinPx[index] = colorCache.outBasin.r;
-                        outBasinPx[index + 1] = colorCache.outBasin.g;
-                        outBasinPx[index + 2] = colorCache.outBasin.b;
+                    outBasinPx[index + 3] = TRANSPARENT.a;
+
+                } else { // water pixel
+                    landPx[index + 3] = TRANSPARENT.a;
+                    coastPx[index + 3] = TRANSPARENT.a;
+
+                    const sb = src[index + 2];
+                    const isOutBasin = outBasinCache.get(sb) ??
+                        outBasinCache.set(sb, !this.basin.subInBasin(sb)).get(sb);
+
+                    if (isOutBasin) {
+                        const color = this._colorCache.get('outBasin');
+                        outBasinPx[index] = color.r;
+                        outBasinPx[index + 1] = color.g;
+                        outBasinPx[index + 2] = color.b;
                         outBasinPx[index + 3] = 255;
                     } else {
-                        outBasinPx[index + 3] = 0;
+                        outBasinPx[index + 3] = TRANSPARENT.a;
                     }
                 }
             }
+
+            if (chunk % (CHUNK_SIZE * 10) === 0) yield "Rendering land...";
         }
+
         landBuffer.updatePixels();
         outBasinBuffer.updatePixels();
         coastLine.updatePixels();
@@ -770,6 +788,33 @@ class Land {
             yield* this.drawShader();
         }
         this.drawn = true;
+    }
+
+    // Helper method for color interpolation
+    _getInterpolatedColor(colorArray, colorIndex, heightValue) {
+        const color = colorArray[colorIndex][1];
+
+        if (!simSettings.smoothLandColor || colorIndex === 0) {
+            return {
+                r: red(color),
+                g: green(color),
+                b: blue(color)
+            };
+        }
+
+        const color1 = colorArray[colorIndex - 1][1];
+        const f = map(heightValue,
+            colorArray[colorIndex][0],
+            colorArray[colorIndex - 1][0],
+            0, 1
+        );
+        const interpolated = lerpColor(color, color1, f);
+
+        return {
+            r: red(interpolated),
+            g: green(interpolated),
+            b: blue(interpolated)
+        };
     }
 
     *drawSnow() {
