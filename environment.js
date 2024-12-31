@@ -820,47 +820,83 @@ class Land {
     *drawSnow() {
         yield "Rendering " + (random() < 0.02 ? "sneaux" : "snow") + "...";
         const { fullW: W, fullH: H } = fullDimensions();
-        const src = this.map.pixels; // source image for land data; red channel is elevation; green channel is land/water; blue channel is sub-basin id
+        const src = this.map.pixels;
 
-        const eleCache = []; // cache elevation values to avoid expensive function calls in pixel loop
+        const SNOW_BASE_COLOR = COLORS.snow;
+        const ELEVATION_MIN = 12;
+        const ELEVATION_MAX = 150;
+        const SNOW_OPACITY = 255;
+        const CHUNK_SIZE = 1000;
+        const SNOW_HEIGHT_FACTOR = 0.95;
+        const SNOW_LAT_THRESHOLD = 0.15;
+        const SNOW_DENSITY_FACTOR = 0.3;
+
+        // cache elevation values to avoid expensive function calls in pixel loop
+        const cache = {
+            elevation: new Array(256),
+            snowColor: {
+                r: new Array(256),
+                g: new Array(256),
+                b: new Array(256)
+            }
+        };
+
         for (let i = 255; i >= 0; i--) {
-            let l;
-            if (this.earth)
-                l = map(sqrt(map(i, 12, 150, 0, 1, true)), 0, 1, 0.501, 1);
-            else
-                l = Math.max(i / 255, 0.501);
-            eleCache[i] = l;
-        }
-        const snowColor = { r: red(COLORS.snow), g: green(COLORS.snow), b: blue(COLORS.snow) };
+            cache.elevation[i] = this.earth ?
+                map(sqrt(map(i, ELEVATION_MIN, ELEVATION_MAX, 0, 1, true)), 0, 1, 0.501, 1) :
+                Math.max(i / 255, 0.501);
 
-        const SHem = this.basin.SHem;
+            // subtle color variation for snow
+            const variation = random(-5, 5);
+            cache.snowColor.r[i] = constrain(red(SNOW_BASE_COLOR) + variation, 0, 255);
+            cache.snowColor.g[i] = constrain(green(SNOW_BASE_COLOR) + variation, 0, 255);
+            cache.snowColor.b[i] = constrain(blue(SNOW_BASE_COLOR) + variation, 0, 255);
+        }
 
         const snowLayers = simSettings.snowLayers * 10;
-        for (let i = 0; i < W; i++) {
-            for (let j = 0; j < H; j++) {
-                let index = 4 * (j * W + i);
+        const SHem = this.basin.SHem;
+
+        for (let chunk = 0; chunk < W * H; chunk += CHUNK_SIZE) {
+            const end = Math.min(chunk + CHUNK_SIZE, W * H);
+
+            for (let pos = chunk; pos < end; pos++) {
+                const i = pos % W;
+                const j = Math.floor(pos / W);
+                const index = 4 * pos;
+
                 if (src[index + 1]) { // if pixel is on land
-                    let l = 1 - j / H;
-                    if (SHem)
-                        l = 1 - l;
-                    let h = 0.95 - eleCache[src[index]];
-                    let p = l > 0 ? Math.ceil((snowLayers / 0.3) * (h / l - 0.15)) : h < 0 ? 0 : snowLayers;
+                    let latitude = 1 - j / H;
+                    if (SHem) latitude = 1 - latitude;
+
+                    const elevation = cache.elevation[src[index]];
+                    const heightFactor = SNOW_HEIGHT_FACTOR - elevation;
+
+                    const densityVariation = map(elevation, 0.5, 1, 1, 1.5);
+                    const snowDepth = latitude > 0 ?
+                        Math.ceil((snowLayers / SNOW_DENSITY_FACTOR) *
+                            (heightFactor / latitude - SNOW_LAT_THRESHOLD) * densityVariation) :
+                        heightFactor < 0 ? 0 : snowLayers;
+
                     for (let k = 0; k < snowLayers; k++) {
-                        if (k >= p) {
-                            snow[k].pixels[index] = snowColor.r;
-                            snow[k].pixels[index + 1] = snowColor.g;
-                            snow[k].pixels[index + 2] = snowColor.b;
-                            snow[k].pixels[index + 3] = 255;
-                        } else
+                        if (k >= snowDepth) {
+                            snow[k].pixels[index] = cache.snowColor.r[src[index]];
+                            snow[k].pixels[index + 1] = cache.snowColor.g[src[index]];
+                            snow[k].pixels[index + 2] = cache.snowColor.b[src[index]];
+                            snow[k].pixels[index + 3] = SNOW_OPACITY;
+                        } else {
                             snow[k].pixels[index + 3] = 0;
+                        }
                     }
-                } else {
+                } else { // water pixel
                     for (let k = 0; k < snowLayers; k++) {
                         snow[k].pixels[index + 3] = 0;
                     }
                 }
             }
+
+            if (chunk % (CHUNK_SIZE * 10) === 0) yield "Rendering snow...";
         }
+
         for (let k = 0; k < snowLayers; k++) {
             snow[k].updatePixels();
         }
