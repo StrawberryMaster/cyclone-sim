@@ -3,9 +3,8 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/strawberrymaster/cyclone-sim)
 ![GitHub repo size](https://img.shields.io/github/repo-size/strawberrymaster/cyclone-sim)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/strawberrymaster/cyclone-sim)
-![P5.js](https://img.shields.io/badge/p5.js-v1.7.0-ED225D)
-![Luxon.js](https://img.shields.io/badge/luxon.js-v3.4.0-ED225D)
-
+![P5.js](https://img.shields.io/badge/p5.js-v1.11.0-ED225D)
+![Luxon.js](https://img.shields.io/badge/luxon.js-v3.4.4-ED225D)
 
 A fork of [Monsoonjr99](https://monsoonjr99.github.io)'s [cyclone-sim](https://monsoonjr99.github.io/cyclone-sim/), a p5.js tropical cyclone simulation game, intended to be more efficient in terms of code and performance. Formerly known as Mona Spoon's Gerrymandered World. This is a work in progress, and is not yet finished. If you want to contribute, see the [contributing](#can-i-contribute) section.
 
@@ -13,7 +12,7 @@ A fork of [Monsoonjr99](https://monsoonjr99.github.io)'s [cyclone-sim](https://m
 You can play the game [here](https://strawberrymaster.github.io/cyclone-sim/). Alternatively, download the files, extract them to a folder and open index.html in your browser.
 ## You said this is more efficient. How so?
 I have made a few changes to the code to make it more efficient, or at least easier to update. Among these changes are:
-- Updating the [p5.js](https://p5js.org) library to the latest version - old one was from 2019!
+- Updating the [p5.js](https://p5js.org) library to the latest version - old one was from 2019! (since then the original cyclone-sim has updated its p5.js version.)
 - Replacing [moment.js](https://momentjs.com/) with [luxon.js](https://moment.github.io/luxon/), which is a smaller library that does the same thing.
 - Cacheing the results of some functions, so that they don't have to be recalculated every frame.
 - Replacing constants with enums, for simplicity.
