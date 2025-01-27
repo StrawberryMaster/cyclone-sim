@@ -2493,37 +2493,32 @@ function keyReleased() {
     UI.inputData.insert = '';
 }
 
-function changeViewTick(t) {
-    let oldS = UI.viewBasin.getSeason(viewTick);
+const seasonCache = new Map();
+
+async function changeViewTick(t) {
     viewTick = t;
-    let newS = UI.viewBasin.getSeason(viewTick);
-    let finish = () => {
-        refreshTracks(oldS !== newS);
-        UI.viewBasin.env.displayLayer();
-    };
-    let requisites = s => {
-        let arr = [];
-        let allFound = true;
-        for (let i = 0; i < s.systems.length; i++) {
-            let r = s.systems[i];
-            if (r instanceof StormRef && (r.lastApplicableAt === undefined || r.lastApplicableAt >= viewTick || simSettings.trackMode === 2)) {
-                arr.push(r.season);
-                allFound = allFound && UI.viewBasin.fetchSeason(r.season);
-            }
-        }
-        if (allFound) finish();
-        else {
-            for (let i = 0; i < arr.length; i++) {
-                arr[i] = UI.viewBasin.fetchSeason(arr[i], false, false, true);
-            }
-            Promise.all(arr).then(finish);
-        }
-    };
-    if (UI.viewBasin.fetchSeason(viewTick, true)) {
-        requisites(UI.viewBasin.fetchSeason(viewTick, true));
-    } else UI.viewBasin.fetchSeason(viewTick, true, false, s => {
-        requisites(s);
-    });
+    const basin = UI.viewBasin;
+    
+    try {
+        const [oldSeason, newSeason] = await Promise.all([
+            getCachedSeason(basin, viewTick),
+            getCachedSeason(basin, t)
+        ]);
+        
+        const needsRefresh = oldSeason !== newSeason;
+        await refreshTracks(needsRefresh);
+        basin.env.displayLayer();
+    } catch (error) {
+        console.error('Error changing view tick:', error);
+    }
+}
+
+async function getCachedSeason(basin, tick) {
+    if (seasonCache.has(tick)) return seasonCache.get(tick);
+    
+    const season = await basin.fetchSeason(tick, true);
+    seasonCache.set(tick, season);
+    return season;
 }
 
 // function deviceTurned(){
@@ -2531,27 +2526,27 @@ function changeViewTick(t) {
 // }
 
 function wrapText(str, w) {
-    let newStr = "";
-    let currLine = "";
-    const words = str.split(" ");
+    const words = str.split(' ');
+    const lines = [];
+    let currentLine = words[0];
 
-    for (let i = 0; i < words.length; i++) {
+    for (let i = 1; i < words.length; i++) {
         const word = words[i];
-        if ((currLine + word).length > w) {
-            newStr += currLine.trim() + "\n";
-            currLine = word + " ";
+        const testLine = currentLine + ' ' + word;
+        
+        if (testLine.length <= w) {
+            currentLine = testLine;
         } else {
-            currLine += word + " ";
+            lines.push(currentLine);
+            currentLine = word;
         }
     }
-    newStr += currLine.trim();
-    return newStr;
+    lines.push(currentLine);
+    return lines.join('\n');
 }
 
 function countTextLines(str) {
-    let l = 1;
-    for (let i = 0; i < str.length; i++) if (str.charAt(i) === '\n') l++;
-    return l;
+    return str.split('\n').length;
 }
 
 const convert = (value, factor, round) => {
