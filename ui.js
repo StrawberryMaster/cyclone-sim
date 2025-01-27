@@ -6,36 +6,88 @@ class UI {
         }
         this.relX = x;
         this.relY = y;
-        this.width = w;
+        this.width = w; 
         this.height = h;
-        if (renderer instanceof Function) this.renderFunc = renderer;
+        this.absX = 0;
+        this.absY = 0;
+        
         if (renderer instanceof Array) {
             let [size, charLimit, enterFunc] = renderer;
             this.isInput = true;
             this.value = '';
-            this.clickFunc = function () {
-                // textInput.value = this.value;
-                // if(charLimit) textInput.maxLength = charLimit;
-                // else textInput.removeAttribute('maxlength');
-                // textInput.focus();
-                UI.inputData.value = this.value;
-                UI.inputData.maxLength = charLimit;
-                UI.inputData.cursor = UI.inputData.selectionStart = UI.inputData.selectionEnd = this.value.length;
-                UI.focusedInput = this;
-                if (onclick instanceof Function) onclick.call(this, UI.focusedInput === this);
-            };
             this.textCanvas = createBuffer(this.width, this.height);
-            this.renderFunc = function (s) {
-                s.input(size);
-            };
+            this.renderFunc = (s) => s.input(size);
+            this.clickFunc = this.handleInputClick(onclick, charLimit);
             if (enterFunc) this.enterFunc = enterFunc;
         } else {
+            this.isInput = false; 
             this.clickFunc = onclick;
-            this.isInput = false;
+            if (renderer instanceof Function) this.renderFunc = renderer;
         }
+
         this.children = [];
-        this.showing = showing === undefined ? true : showing;
+        this.showing = showing ?? true;
+
         if (!this.parent) UI.elements.push(this);
+    }
+
+    handleInputClick(onclick, charLimit) {
+        return function() {
+            UI.inputData.value = this.value;
+            UI.inputData.maxLength = charLimit;
+            UI.inputData.cursor = UI.inputData.selectionStart = UI.inputData.selectionEnd = this.value.length;
+            UI.focusedInput = this;
+            onclick?.call(this, UI.focusedInput === this);
+        };
+    }
+
+    updateAbsolutePosition() {
+        if (this.parent?.showing) {
+            this.absX = this.parent.absX + this.relX;
+            this.absY = this.parent.absY + this.relY; 
+        } else {
+            this.absX = this.relX;
+            this.absY = this.relY;
+        }
+    }
+
+    render() {
+        if (!this.showing) return;
+
+        this.updateAbsolutePosition();
+        
+        push();
+        translate(this.relX, this.relY);
+        
+        if (this.renderFunc) {
+            this.renderFunc(this.schematics());
+        }
+
+        for (let c of this.children) {
+            c.render();
+        }
+        
+        pop();
+    }
+
+    checkMouseOver() {
+        if (!this.showing) return null;
+
+        for (let i = this.children.length - 1; i >= 0; i--) {
+            const childResult = this.children[i].checkMouseOver();
+            if (childResult) return childResult; 
+        }
+
+        const mouseX = getMouseX();
+        const mouseY = getMouseY();
+        
+        if (this.clickFunc && 
+            mouseX >= this.absX && mouseX < (this.absX + this.width) &&
+            mouseY >= this.absY && mouseY < (this.absY + this.height)) {
+            return this;
+        }
+
+        return null;
     }
 
     getX() {
@@ -46,22 +98,6 @@ class UI {
     getY() {
         if (this.parent) return this.parent.getY() + this.relY;
         return this.relY;
-    }
-
-    render() {
-        if (this.showing) {
-            translate(this.relX, this.relY);
-            if (this.renderFunc) this.renderFunc(this.schematics());
-            if (this.children.length === 1) {
-                this.children[0].render();
-            } else {
-                for (let c of this.children) {
-                    push();
-                    c.render();
-                    pop();
-                }
-            }
-        }
     }
 
     schematics() {
@@ -152,24 +188,6 @@ class UI {
     append(chain, ...opts) {
         if (chain !== false && this.children.length > chain) return this.children[chain].append(0, ...opts);
         return new UI(this, ...opts);
-    }
-
-    checkMouseOver() {
-        if (this.showing) {
-            if (this.children.length > 0) {
-                let cmo = null;
-                for (let i = this.children.length - 1; i >= 0; i--) {
-                    cmo = this.children[i].checkMouseOver();
-                    if (cmo) return cmo;
-                }
-            }
-            let left = this.getX();
-            let right = left + this.width;
-            let top = this.getY();
-            let bottom = top + this.height;
-            if (this.clickFunc && getMouseX() >= left && getMouseX() < right && getMouseY() >= top && getMouseY() < bottom) return this;
-        }
-        return null;
     }
 
     isHovered() {
@@ -2536,17 +2554,15 @@ function countTextLines(str) {
     return l;
 }
 
-function ktsToMph(k, rnd) {
-    let val = k * 1.15078;
-    if (rnd) val = round(val / rnd) * rnd;
-    return val;
-}
+const convert = (value, factor, round) => {
+    const result = value * factor;
+    return round ? Math.round(result / round) * round : result;
+};
 
-function ktsToKmh(k, rnd) {
-    let val = k * 1.852;
-    if (rnd) val = round(val / rnd) * rnd;
-    return val;
-}
+const ktsToMph = (k, round) => convert(k, 1.15078, round);
+const ktsToKmh = (k, round) => convert(k, 1.852, round);
+const oneMinToTenMin = (w, round) => convert(w, 7/8, round);
+const mbToInHg = (mb, round) => convert(mb, 0.02953, round);
 
 function displayWindspeed(kts, rnd) {
     const unitLabels = ['kts', 'mph', 'km/h'];
@@ -2558,18 +2574,6 @@ function displayWindspeed(kts, rnd) {
     const unitLabel = unitLabels[speedUnit];
 
     return `${value} ${unitLabel}`;
-}
-
-function oneMinToTenMin(w, rnd) {
-    let val = w * 7 / 8;    // simple ratio
-    if (rnd) val = round(val / rnd) * rnd;
-    return val;
-}
-
-function mbToInHg(mb, rnd) {
-    let val = mb * 0.02953;
-    if (rnd) val = round(val / rnd) * rnd;
-    return val;
 }
 
 // converts a radians-from-east angle into a degrees-from-north heading with compass direction for display formatting
