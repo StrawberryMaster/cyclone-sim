@@ -1,19 +1,11 @@
 // ---- Simulation Modes ---- //
-const SIMULATION_MODES = { // Labels for sim mode selector UI
-    NORMAL: 0,
-    HYPER: 1,
-    WILD: 2,
-    MEGABLOBS: 3,
-    EXPERIMENTAL: 4,
-    SPOOKY: 5
-};
-
-const SIM_MODE_NORMAL = SIMULATION_MODES.NORMAL;
-const SIM_MODE_HYPER = SIMULATION_MODES.HYPER;
-const SIM_MODE_WILD = SIMULATION_MODES.WILD;
-const SIM_MODE_MEGABLOBS = SIMULATION_MODES.MEGABLOBS;
-const SIM_MODE_EXPERIMENTAL = SIMULATION_MODES.EXPERIMENTAL;
-const SIM_MODE_SPOOKY = SIMULATION_MODES.SPOOKY;
+const SIMULATION_MODES = ['Normal', 'Hyper', 'Wild', 'Megablobs', 'Experimental', 'Spooky'];
+const SIM_MODE_NORMAL = 0;
+const SIM_MODE_HYPER = 1;
+const SIM_MODE_WILD = 2;
+const SIM_MODE_MEGABLOBS = 3;
+const SIM_MODE_EXPERIMENTAL = 4;
+const SIM_MODE_SPOOKY = 5;
 
 // ---- Active Attributes ---- //
 
