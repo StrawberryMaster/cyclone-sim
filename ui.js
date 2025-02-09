@@ -6,11 +6,11 @@ class UI {
         }
         this.relX = x;
         this.relY = y;
-        this.width = w; 
+        this.width = w;
         this.height = h;
         this.absX = 0;
         this.absY = 0;
-        
+
         if (renderer instanceof Array) {
             let [size, charLimit, enterFunc] = renderer;
             this.isInput = true;
@@ -20,7 +20,7 @@ class UI {
             this.clickFunc = this.handleInputClick(onclick, charLimit);
             if (enterFunc) this.enterFunc = enterFunc;
         } else {
-            this.isInput = false; 
+            this.isInput = false;
             this.clickFunc = onclick;
             if (renderer instanceof Function) this.renderFunc = renderer;
         }
@@ -32,7 +32,7 @@ class UI {
     }
 
     handleInputClick(onclick, charLimit) {
-        return function() {
+        return function () {
             UI.inputData.value = this.value;
             UI.inputData.maxLength = charLimit;
             UI.inputData.cursor = UI.inputData.selectionStart = UI.inputData.selectionEnd = this.value.length;
@@ -44,7 +44,7 @@ class UI {
     updateAbsolutePosition() {
         if (this.parent?.showing) {
             this.absX = this.parent.absX + this.relX;
-            this.absY = this.parent.absY + this.relY; 
+            this.absY = this.parent.absY + this.relY;
         } else {
             this.absX = this.relX;
             this.absY = this.relY;
@@ -55,10 +55,10 @@ class UI {
         if (!this.showing) return;
 
         this.updateAbsolutePosition();
-        
+
         push();
         translate(this.relX, this.relY);
-        
+
         if (this.renderFunc) {
             this.renderFunc(this.schematics());
         }
@@ -66,7 +66,7 @@ class UI {
         for (let c of this.children) {
             c.render();
         }
-        
+
         pop();
     }
 
@@ -75,13 +75,13 @@ class UI {
 
         for (let i = this.children.length - 1; i >= 0; i--) {
             const childResult = this.children[i].checkMouseOver();
-            if (childResult) return childResult; 
+            if (childResult) return childResult;
         }
 
         const mouseX = getMouseX();
         const mouseY = getMouseY();
-        
-        if (this.clickFunc && 
+
+        if (this.clickFunc &&
             mouseX >= this.absX && mouseX < (this.absX + this.width) &&
             mouseY >= this.absY && mouseY < (this.absY + this.height)) {
             return this;
@@ -2498,13 +2498,13 @@ const seasonCache = new Map();
 async function changeViewTick(t) {
     viewTick = t;
     const basin = UI.viewBasin;
-    
+
     try {
         const [oldSeason, newSeason] = await Promise.all([
             getCachedSeason(basin, viewTick),
             getCachedSeason(basin, t)
         ]);
-        
+
         const needsRefresh = oldSeason !== newSeason;
         await refreshTracks(needsRefresh);
         basin.env.displayLayer();
@@ -2515,7 +2515,7 @@ async function changeViewTick(t) {
 
 async function getCachedSeason(basin, tick) {
     if (seasonCache.has(tick)) return seasonCache.get(tick);
-    
+
     const season = await basin.fetchSeason(tick, true);
     seasonCache.set(tick, season);
     return season;
@@ -2533,7 +2533,7 @@ function wrapText(str, w) {
     for (let i = 1; i < words.length; i++) {
         const word = words[i];
         const testLine = currentLine + ' ' + word;
-        
+
         if (testLine.length <= w) {
             currentLine = testLine;
         } else {
@@ -2556,7 +2556,7 @@ const convert = (value, factor, round) => {
 
 const ktsToMph = (k, round) => convert(k, 1.15078, round);
 const ktsToKmh = (k, round) => convert(k, 1.852, round);
-const oneMinToTenMin = (w, round) => convert(w, 7/8, round);
+const oneMinToTenMin = (w, round) => convert(w, 7 / 8, round);
 const mbToInHg = (mb, round) => convert(mb, 0.02953, round);
 
 function displayWindspeed(kts, rnd) {
@@ -2611,23 +2611,21 @@ function damageDisplayNumber(d) {
 }
 
 function formatDate(m) {
-    if (!m || !(m instanceof moment)) return '';
-
-    const format = 'HH[z] MMM DD';
-    const yearStr = zeroPad(Math.abs(m.year()), 4);
-    const eraStr = m.year() < 1 ? ' B.C.E.' : '';
-
-    return `${m.format(format)} ${yearStr}${eraStr}`;
+    if (!moment.isMoment(m)) return '';
+    const year = m.year();
+    const eraSuffix = year < 1 ? ' B.C.E.' : '';
+    return `${m.format('HH[z] MMM DD')} ${zeroPad(Math.abs(year), 4)}${eraSuffix}`;
 }
 
-function seasonName(y, h) {
-    h = h || (UI.viewBasin instanceof Basin && UI.viewBasin.SHem);
-    const eraYear = yr => yr < 1 ? 1 - yr : yr;
-    const bce = ' B.C.E.';
-    let str = zeroPad(eraYear(y), 4);
-    if (h) {
-        str += '-' + zeroPad(eraYear(y + 1) % 100, 2);
+function seasonName(year, isSouthernHemisphere = UI.viewBasin?.SHem ?? false) {
+    const formatEraYear = y => zeroPad(y < 1 ? 1 - y : y, 4);
+    const baseYear = formatEraYear(year);
+
+    let season = baseYear;
+    if (isSouthernHemisphere) {
+        const shortNextYear = formatEraYear(year + 1).slice(-2);
+        season += `-${shortNextYear}`;
     }
-    if (y < 1) str += bce;
-    return str;
+
+    return year < 1 ? `${season} B.C.E.` : season;
 }
