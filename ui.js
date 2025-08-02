@@ -220,6 +220,53 @@ class UI {
     }
 }
 
+// Helper functions to map p5.js calls to native canvas
+function fill(color) {
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = color;
+}
+function stroke(color) {
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = color;
+}
+function strokeWeight(weight) {
+    const ctx = canvas.getContext('2d');
+    ctx.lineWidth = weight;
+}
+function textAlign(align, baseline) {
+    const ctx = canvas.getContext('2d');
+    ctx.textAlign = align === CENTER ? 'center' : align === LEFT ? 'left' : align === RIGHT ? 'right' : align;
+    ctx.textBaseline = baseline === CENTER ? 'middle' : baseline === TOP ? 'top' : baseline === BOTTOM ? 'bottom' : baseline;
+}
+function textSize(size) {
+    const ctx = canvas.getContext('2d');
+    ctx.font = `${size}px sans-serif`;
+}
+function text(str, x, y) {
+    const ctx = canvas.getContext('2d');
+    ctx.fillText(str, x, y);
+}
+function rect(x, y, w, h) {
+    const ctx = canvas.getContext('2d');
+    ctx.fillRect(x, y, w, h);
+}
+function triangle(x1, y1, x2, y2, x3, y3) {
+    const ctx = canvas.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.lineTo(x3, y3);
+    ctx.closePath();
+    ctx.fill();
+}
+function line(x1, y1, x2, y2) {
+    const ctx = canvas.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+}
+
 UI.elements = [];
 
 UI.renderAll = function () {
@@ -449,18 +496,14 @@ UI.init = function () {
     let itemIndex = Math.floor(Math.random() * startItems.length)
 
     mainMenu.append(false, WIDTH / 2, HEIGHT / 4, 0, 0, function (s) {  // title text
-        const ctx = canvas.getContext('2d');
-        ctx.save();
-        ctx.fillStyle = COLORS.UI.altText;
-        ctx.strokeStyle = "#000";
-        ctx.lineWidth = 2;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.font = "36px sans-serif";
-        ctx.fillText(TITLE, 0, 0);
-        ctx.font = "italic 18px sans-serif";
-        ctx.fillText(startItems[itemIndex], 0, 40);
-        ctx.restore();
+        fill(COLORS.UI.altText);
+        stroke("#000");
+        strokeWeight(2);
+        textAlign("center", "middle");
+        textSize(36);
+        text(TITLE, 0, 0);
+        textSize(18);
+        text(startItems[itemIndex], 0, 40);
     });
 
     mainMenu.append(false, WIDTH / 2 - 100, HEIGHT / 2 - 20, 200, 40, function (s) {    // "New Basin" button
@@ -518,6 +561,7 @@ UI.init = function () {
         stroke(0);
         strokeWeight(2);
         textAlign(LEFT, CENTER);
+        textSize(18);
         text("Starting year: ", 0, basinCreationMenuButtonHeights / 2);
     });
 
