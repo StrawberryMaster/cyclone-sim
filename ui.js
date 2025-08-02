@@ -56,18 +56,20 @@ class UI {
 
         this.updateAbsolutePosition();
 
-        push();
-        translate(this.relX, this.relY);
+        const ctx = canvas.getContext('2d');
+        ctx.save();
+
+        ctx.translate(this.relX, this.relY);
 
         if (this.renderFunc) {
-            this.renderFunc(this.schematics());
+            this.renderFunc(this.schematics(ctx));
         }
 
         for (let c of this.children) {
             c.render();
         }
 
-        pop();
+        ctx.restore();
     }
 
     checkMouseOver() {
@@ -100,75 +102,48 @@ class UI {
         return this.relY;
     }
 
-    schematics() {
+    schematics(ctx) {
         let s = {};
         s.fullRect = () => {
-            rect(0, 0, this.width, this.height);
+            ctx.fillRect(0, 0, this.width, this.height);
         };
         s.button = (txt, box, size, grey) => {
-            noStroke();
             if (box) {
-                fill(COLORS.UI.buttonBox);
+                ctx.fillStyle = COLORS.UI.buttonBox;
                 s.fullRect();
             }
             if (this.isHovered()) {
-                fill(COLORS.UI.buttonHover);
+                ctx.fillStyle = COLORS.UI.buttonHover;
                 s.fullRect();
             }
-            if (grey) fill(COLORS.UI.greyText);
-            else fill(COLORS.UI.text);
-            textAlign(CENTER, CENTER);
-            textSize(size || 18);
-            text(txt, this.width / 2, this.height / 2);
+            ctx.fillStyle = grey ? COLORS.UI.greyText : COLORS.UI.text;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = `${size || 18}px sans-serif`;
+            ctx.fillText(txt, this.width / 2, this.height / 2);
         };
         s.input = (size) => {
-            fill(COLORS.UI.input);
-            if (UI.focusedInput === this) stroke(COLORS.UI.text);
+            ctx.fillStyle = COLORS.UI.input;
+            if (UI.focusedInput === this) ctx.strokeStyle = COLORS.UI.text;
             else {
                 if (this.isHovered()) {
-                    noStroke();
+                    ctx.fillStyle = COLORS.UI.buttonHover;
                     s.fullRect();
-                    fill(COLORS.UI.buttonHover);
                 }
-                stroke(COLORS.UI.nonSelectedInput);
+                ctx.strokeStyle = COLORS.UI.nonSelectedInput;
             }
-            s.fullRect();
-            let c = this.textCanvas;
-            c.clear();
-            c.noStroke();
-            c.fill(COLORS.UI.text);
-            c.textSize(size || 18);
-            let t = UI.focusedInput === this ? /* textInput */UI.inputData.value : this.value;
-            let xAnchor;
-            if (UI.focusedInput === this) {
-                c.textAlign(LEFT, CENTER);
-                let caret1X = c.textWidth(t.slice(0,/* textInput */UI.inputData.selectionStart));
-                let caret2X = c.textWidth(t.slice(0,/* textInput */UI.inputData.selectionEnd));
-                if (caret2X > this.width - 5) xAnchor = this.width - 5 - caret2X;
-                else xAnchor = 5;
-                caret1X += xAnchor;
-                caret2X += xAnchor;
-                c.text(t, xAnchor, this.height / 2);
-                if (/* textInput */UI.inputData.selectionStart === /* textInput */UI.inputData.selectionEnd) {
-                    c.stroke(COLORS.UI.text);
-                    c.noFill();
-                    if (millis() % 1000 < 500) c.line(caret1X, this.height / 8, caret1X, 7 * this.height / 8);
-                } else {
-                    c.rect(caret1X, this.height / 8, caret2X - caret1X, 3 * this.height / 4);
-                    c.fill(COLORS.UI.input);
-                    c.text(t.slice(/* textInput */UI.inputData.selectionStart, /* textInput */UI.inputData.selectionEnd), caret1X, this.height / 2);
-                }
+            ctx.fillRect(0, 0, this.width, this.height);
+            ctx.font = `${size || 18}px sans-serif`;
+            ctx.fillStyle = COLORS.UI.text;
+            let t = UI.focusedInput === this ? UI.inputData.value : this.value;
+            let xAnchor = 5;
+            if (ctx.measureText(t).width > this.width - 5) {
+                ctx.textAlign = 'right';
+                xAnchor = this.width - 5;
             } else {
-                if (c.textWidth(t) > this.width - 5) {
-                    c.textAlign(RIGHT, CENTER);
-                    xAnchor = this.width - 5;
-                } else {
-                    c.textAlign(LEFT, CENTER);
-                    xAnchor = 5;
-                }
-                c.text(t, xAnchor, this.height / 2);
+                ctx.textAlign = 'left';
             }
-            image(c, 0, 0, this.width, this.height);
+            ctx.fillText(t, xAnchor, this.height / 2);
         };
         return s;
     }
@@ -474,15 +449,18 @@ UI.init = function () {
     let itemIndex = Math.floor(Math.random() * startItems.length)
 
     mainMenu.append(false, WIDTH / 2, HEIGHT / 4, 0, 0, function (s) {  // title text
-        fill(COLORS.UI.altText);
-        stroke(0);
-        strokeWeight(2);
-        textAlign(CENTER, CENTER);
-        textSize(36);
-        text(TITLE, 0, 0);
-        textSize(18);
-        textStyle(ITALIC);
-        text(startItems[itemIndex], 0, 40);
+        const ctx = canvas.getContext('2d');
+        ctx.save();
+        ctx.fillStyle = COLORS.UI.altText;
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 2;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "36px sans-serif";
+        ctx.fillText(TITLE, 0, 0);
+        ctx.font = "italic 18px sans-serif";
+        ctx.fillText(startItems[itemIndex], 0, 40);
+        ctx.restore();
     });
 
     mainMenu.append(false, WIDTH / 2 - 100, HEIGHT / 2 - 20, 200, 40, function (s) {    // "New Basin" button
@@ -1578,7 +1556,7 @@ UI.init = function () {
             let y;
             let S = selectedStorm && selectedStorm.aliveAt(viewTick);
             if (S) {
-                let p = selectedStorm.getStormDataByTick(viewTick, true).pos;
+                let p = S.getStormDataByTick(viewTick, true).pos;
                 x = p.x;
                 y = p.y;
             } else {
