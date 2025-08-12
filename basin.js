@@ -13,10 +13,7 @@ class Basin {
         this.godMode = opts.godMode;
         this.SHem = opts.hem;
         this.actMode = opts.actMode || 0;
-        if (SEASON_CURVE[this.actMode])
-            seasonCurve = window[SEASON_CURVE[this.actMode]];
-        else
-            seasonCurve = window[SEASON_CURVE.default];
+        this._updateSeasonCurve();
         if (opts.year !== undefined)
             this.startYear = opts.year;
         else if (this.SHem)
@@ -108,6 +105,14 @@ class Basin {
         }
     }
 
+    _updateSeasonCurve() {
+        if (SEASON_CURVE[this.actMode]) {
+            seasonCurve = window[SEASON_CURVE[this.actMode]];
+        } else {
+            seasonCurve = window[SEASON_CURVE.default];
+        }
+    }
+
     mount() {    // mounts the basin to the viewer
         viewTick = this.tick;
         UI.viewBasin = this;
@@ -120,46 +125,60 @@ class Basin {
     }
 
     advanceSimOneStep() {
+        // Metadados iguais, mas com pequenas otimizações internas
         let metadata = { needTrackRefresh: false, needForceTrackRefresh: false, needEnvLayerRefresh: false, needSave: false };
-        let vp = this.viewingPresent();
-        let os = this.getSeason(-1);
+        const viewingPresent = this.viewingPresent();
+        const prevSeason = this.getSeason(-1);
         this.tick++;
-        let vs = this.getSeason(viewTick);
+        const curSeason = this.getSeason(-1);
+        const viewSeason = this.getSeason(viewTick);
         viewTick = this.tick;
-        let curSeason = this.getSeason(-1);
-        if (curSeason !== os) {
-            let e = new Season(this);
-            for (let s of this.activeSystems) e.addSystem(new StormRef(this, s.fetchStorm()));
-            this.seasons[curSeason] = e;
+
+        if (curSeason !== prevSeason) {
+            const newSeason = new Season(this);
+            for (let s of this.activeSystems) newSeason.addSystem(new StormRef(this, s.fetchStorm()));
+            this.seasons[curSeason] = newSeason;
             this.expireSeasonTimer(curSeason);
         }
-        if (!vp || curSeason !== vs) {
+
+        if (!viewingPresent || curSeason !== viewSeason) {
             metadata.needTrackRefresh = true;
-            metadata.needForceTrackRefresh = curSeason !== vs;
+            metadata.needForceTrackRefresh = curSeason !== viewSeason;
         }
-        this.env.wobble();    // random change in environment for future forecast realism
-        for (let i = 0; i < this.activeSystems.length; i++) {   // update active storm systems
-            for (let j = i + 1; j < this.activeSystems.length; j++) {
-                this.activeSystems[i].interact(this.activeSystems[j], true);
+
+        this.env.wobble();
+
+        // Otimização: cache array e length para loops internos pesados
+        const systems = this.activeSystems;
+        for (let i = 0, len = systems.length; i < len; i++) {
+            const si = systems[i];
+            for (let j = i + 1; j < len; j++) {
+                si.interact(systems[j], true);
             }
-            this.activeSystems[i].update();
+            si.update();
         }
-        SPAWN_RULES[this.actMode].doSpawn(this);    // spawn new storm systems
+
+        SPAWN_RULES[this.actMode].doSpawn(this);
+
+        // Remoção de mortos (loop reverso já eficiente)
         let stormKilled = false;
-        for (let i = this.activeSystems.length - 1; i >= 0; i--) {    // remove dead storm systems from activeSystems array
-            if (!this.activeSystems[i].fetchStorm().current) {
-                this.activeSystems.splice(i, 1);
+        for (let i = systems.length - 1; i >= 0; i--) {
+            if (!systems[i].fetchStorm().current) {
+                systems.splice(i, 1);
                 stormKilled = true;
             }
         }
-        metadata.needTrackRefresh |= stormKilled;   // redraw tracks whenever a storm system dies
-        if (this.tick % ADVISORY_TICKS === 0) {   // redraw map layer and record environmental field state every advisory
+        if (stormKilled) metadata.needTrackRefresh = true;
+
+        if (this.tick % ADVISORY_TICKS === 0) {
             metadata.needEnvLayerRefresh = true;
             this.env.record();
         }
-        let curTime = this.tickMoment();
-        if (simSettings.doAutosave && (curTime.date() === 1 || curTime.date() === 15) && curTime.hour() === 0)    // autosave at 00z on the 1st and 15th days of every month
+
+        const curTime = this.tickMoment();
+        if (simSettings.doAutosave && (curTime.date() === 1 || curTime.date() === 15) && curTime.hour() === 0)
             metadata.needSave = true;
+
         return metadata;
     }
 
@@ -357,32 +376,38 @@ class Basin {
         return this.tickMoment(t).year();
     }
 
-    fetchSeason(n, isTick, loadedRequired, callback) {  // returns the season object given a year number, or given a sim tick if isTick is true
+    fetchSeason(n, isTick, loadedRequired, callback) {
         if (isTick) n = this.getSeason(n);
-        let season;
+        let season = this.seasons[n];
         let promise;
-        if (this.seasons[n]) {
-            season = this.seasons[n];
+
+        if (season) {
+            season.lastAccessed = DateTime.now().toMillis();
             promise = Promise.resolve(season);
         } else {
-            if (this.seasonsBusyLoading[n]) promise = this.seasonsBusyLoading[n];
-            else {
-                promise = this.seasonsBusyLoading[n] = waitForAsyncProcess(() => {
+            if (this.seasonsBusyLoading[n]) {
+                promise = this.seasonsBusyLoading[n];
+            } else {
+                // Evita múltiplos loads concorrentes
+                this.seasonsBusyLoading[n] = promise = waitForAsyncProcess(() => {
                     return db.seasons.where('[saveName+season]').equals([this.saveName, n]).last().then(res => {
                         if (res) {
-                            let d = LoadData.wrap(res);
-                            let seas = this.seasons[n] = new Season(this, d);
+                            const now = DateTime.now().toMillis();
+                            const d = LoadData.wrap(res);
+                            const seas = this.seasons[n] = new Season(this, d);
                             this.expireSeasonTimer(n);
                             this.seasonsBusyLoading[n] = undefined;
-                            seas.lastAccessed = DateTime.now().toMillis();
+                            seas.lastAccessed = now;
                             return seas;
-                        } else return undefined;
+                        }
+                        return undefined;
                     });
                 }, 'Retrieving season...');
             }
         }
-        if (season) season.lastAccessed = DateTime.now().toMillis();
-        else if (loadedRequired) throw new Error(LOADED_SEASON_REQUIRED_ERROR);
+
+        if (!season && loadedRequired) throw new Error(LOADED_SEASON_REQUIRED_ERROR);
+
         if (callback instanceof Function) promise.then(callback);
         else if (callback) return promise;
         return season;
@@ -390,21 +415,25 @@ class Basin {
 
     seasonUnloadable(n) {
         n = parseInt(n);
-        if (!this.seasons[n]) return false;
-        let s = this.seasons[n];
-        let v = this.getSeason(viewTick);
+        const s = this.seasons[n];
+        if (!s) return false;
+        const viewSeason = this.getSeason(viewTick);
         for (let a of this.activeSystems) if (a.fetchStorm().originSeason() === n) return false;
-        return !s.modified && n !== v && n !== v - 1 && n !== this.getSeason(-1);
+        return !s.modified && n !== viewSeason && n !== viewSeason - 1 && n !== this.getSeason(-1);
     }
 
     expireSeasonTimer(n) {
-        let f = () => {
-            if (this.seasons[n]) {
-                if (moment().diff(this.seasons[n].lastAccessed) >= LOADED_SEASON_EXPIRATION && this.seasonUnloadable(n)) this.seasons[n] = undefined;
-                else this.expireSeasonTimer(n);
+        clearTimeout(this.seasonExpirationTimers[n]);
+        this.seasonExpirationTimers[n] = setTimeout(() => {
+            const s = this.seasons[n];
+            if (s) {
+                if (moment().diff(s.lastAccessed) >= LOADED_SEASON_EXPIRATION && this.seasonUnloadable(n)) {
+                    this.seasons[n] = undefined;
+                } else {
+                    this.expireSeasonTimer(n);
+                }
             }
-        };
-        this.seasonExpirationTimers[n] = setTimeout(f, LOADED_SEASON_EXPIRATION);
+        }, LOADED_SEASON_EXPIRATION);
     }
 
     // hard-coded definition of earth map sub-basins (could use a data-driven approach but this codebase is now beyond forsaken so why bother)
@@ -491,34 +520,36 @@ class Basin {
     }
 
     save() {
-        let reqSeasons = [];
+        const neededSeasonIds = new Set();
         for (let k in this.seasons) {
-            if (this.seasons[k] && this.seasons[k].modified) {
-                let seas = this.seasons[k];
+            const seas = this.seasons[k];
+            if (seas && seas.modified) {
                 for (let i = 0; i < seas.systems.length; i++) {
-                    if (seas.systems[i] instanceof StormRef) {
-                        reqSeasons.push(this.fetchSeason(seas.systems[i].season, false, false, true));
+                    const sys = seas.systems[i];
+                    if (sys instanceof StormRef) {
+                        neededSeasonIds.add(sys.season);
                     }
                 }
             }
         }
+        const reqSeasons = [];
+        for (let sid of neededSeasonIds) {
+            reqSeasons.push(this.fetchSeason(sid, false, false, true));
+        }
+
         return Promise.all(reqSeasons).then(() => {
             let obj = {};
             obj.format = SAVE_FORMAT;
             let b = obj.value = {};
             b.activeSystems = [];
-            for (let a of this.activeSystems) {
-                b.activeSystems.push(a.save());
-            }
+            for (let a of this.activeSystems) b.activeSystems.push(a.save());
             b.envData = {};
             for (let f of this.env.fieldList) {
                 let fd = b.envData[f] = {};
                 fd.version = this.env.fields[f].version;
                 fd.accurateAfter = this.env.fields[f].accurateAfter;
                 let d = fd.noiseData = [];
-                for (let c of this.env.fields[f].noise) {
-                    d.push(c.save());
-                }
+                for (let c of this.env.fields[f].noise) d.push(c.save());
             }
             b.subBasins = {};
             for (let i in this.subBasins) {
@@ -526,45 +557,36 @@ class Basin {
                 if (s instanceof SubBasin) b.subBasins[i] = s.save();
             }
             b.flags = 0;
-            b.flags |= 0;   // former hyper mode
+            b.flags |= 0;
             b.flags <<= 1;
             b.flags |= this.godMode;
             b.flags <<= 1;
             b.flags |= this.SHem;
-            for (let p of [
-                'mapType',
-                'tick',
-                'seed',
-                'startYear',
-                'actMode'
-            ]) b[p] = this[p];
+            for (let p of ['mapType','tick','seed','startYear','actMode']) b[p] = this[p];
+
             return db.transaction('rw', db.saves, db.seasons, () => {
                 db.saves.put(obj, this.saveName);
                 for (let k in this.seasons) {
-                    if (this.seasons[k] && this.seasons[k].modified) {
-                        let seas = {};
-                        seas.format = SAVE_FORMAT;
-                        seas.saveName = this.saveName;
-                        seas.season = parseInt(k);
-                        seas.value = this.seasons[k].save();
-                        let cur = db.seasons.where('[saveName+season]').equals([this.saveName, seas.season]);
+                    let seas = this.seasons[k];
+                    if (seas && seas.modified) {
+                        let toStore = {
+                            format: SAVE_FORMAT,
+                            saveName: this.saveName,
+                            season: parseInt(k),
+                            value: seas.save()
+                        };
+                        let cur = db.seasons.where('[saveName+season]').equals([this.saveName, toStore.season]);
                         cur.count().then(c => {
                             if (c > 1) {
-                                cur.delete().then(() => {
-                                    db.seasons.put(seas);
-                                });
-                            } else if (c === 1) cur.modify((s, ref) => {
-                                ref.value = seas;
-                            });
-                            else db.seasons.put(seas);
+                                cur.delete().then(() => db.seasons.put(toStore));
+                            } else if (c === 1) cur.modify((s, ref) => { ref.value = toStore; });
+                            else db.seasons.put(toStore);
                         });
                     }
                 }
             }).then(() => {
                 this.lastSaved = this.tick;
-                for (let k in this.seasons) {
-                    if (this.seasons[k]) this.seasons[k].modified = false;
-                }
+                for (let k in this.seasons) if (this.seasons[k]) this.seasons[k].modified = false;
             });
         }).catch(e => {
             console.warn("Could not save due to an error");
@@ -621,7 +643,7 @@ class Basin {
                         if (obj.hurricaneStrengthTerm !== undefined) oldHurricaneStrengthTerm = obj.hurricaneStrengthTerm;
                         this.lastSaved = this.tick;
                     } else {  // localstorage format backwards compatibility
-                        let str = data.value.str;
+                        let str = data.value;
                         let format = data.format;
                         let names = data.value.names;
                         if (str) {
@@ -681,10 +703,7 @@ class Basin {
                         }
                     }
                     this.env.init(envData);
-                    if (SEASON_CURVE[this.actMode])
-                        seasonCurve = window[SEASON_CURVE[this.actMode]];
-                    else
-                        seasonCurve = window[SEASON_CURVE.default];
+                    this._updateSeasonCurve();
                     if (oldNameList) {
                         let desSys = DesignationSystem.convertFromOldNameList(oldNameList);
                         if (!desSys.naming.annual)
@@ -738,10 +757,10 @@ class Basin {
                     }
                     return Promise.all(arr);
                 });
-            }).then(() => this);
-        }, 'Loading Basin...').catch(e => {
-            console.error(e);
-        });
+            }).then(() => this).catch(e => {
+                console.error(e);
+            });
+        }, 'Loading basin...');
     }
 
     saveAs(newName) {
